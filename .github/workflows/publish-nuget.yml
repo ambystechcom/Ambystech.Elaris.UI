@@ -55,7 +55,7 @@ jobs:
       run: dotnet build src/Ambystech.Elaris.UI.csproj --configuration Release --no-restore
 
     - name: Test
-      run: dotnet test tests/Ambystech.Elaris.UI.Tests.csproj --configuration Release --no-build --verbosity normal
+      run: dotnet test tests/Ambystech.Elaris.UI.Tests.csproj --configuration Release --verbosity normal
 
     - name: Pack
       run: dotnet pack src/Ambystech.Elaris.UI.csproj --configuration Release --no-build --output ./artifacts
