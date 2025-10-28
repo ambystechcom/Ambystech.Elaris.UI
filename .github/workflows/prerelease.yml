@@ -1,0 +1,95 @@
+name: Publish Prerelease to NuGet
+
+on:
+  push:
+    branches:
+      - develop
+      - 'feature/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.modified, '.github/workflows/')"
+    outputs:
+      version: ${{ steps.gitversion.outputs.semVer }}
+      nuget_version: ${{ steps.gitversion.outputs.nuGetVersionV2 }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: |
+          8.0.x
+          9.0.x
+
+    - name: Install GitVersion
+      uses: gittools/actions/gitversion/setup@v1.1.1
+      with:
+        versionSpec: '5.x'
+
+    - name: Determine Version
+      id: gitversion
+      uses: gittools/actions/gitversion/execute@v1.1.1
+      with:
+        useConfigFile: true
+        configFilePath: GitVersion.yml
+
+    - name: Display calculated version
+      run: |
+        echo "Version: ${{ steps.gitversion.outputs.semVer }}"
+        echo "NuGetVersion: ${{ steps.gitversion.outputs.nuGetVersionV2 }}"
+
+    - name: Update csproj version
+      run: |
+        sed -i 's/<Version>.*<\/Version>/<Version>${{ steps.gitversion.outputs.nuGetVersionV2 }}<\/Version>/' src/Ambystech.Elaris.UI.csproj
+
+    - name: Restore dependencies
+      run: dotnet restore src/Ambystech.Elaris.UI.csproj
+
+    - name: Build
+      run: dotnet build src/Ambystech.Elaris.UI.csproj --configuration Release --no-restore
+
+    - name: Test
+      run: dotnet test tests/Ambystech.Elaris.UI.Tests.csproj --configuration Release --verbosity normal
+
+    - name: Pack
+      run: dotnet pack src/Ambystech.Elaris.UI.csproj --configuration Release --no-build --output ./artifacts
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: nuget-package-prerelease
+        path: ./artifacts/*.nupkg
+
+  publish-prerelease:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: "!contains(github.event.head_commit.modified, '.github/workflows/')"
+
+    steps:
+    - name: Download artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: nuget-package-prerelease
+        path: ./artifacts
+
+    - name: Publish to NuGet
+      run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+    - name: Display prerelease info
+      run: |
+        echo "✅ Prerelease package published to NuGet"
+        echo "Version: ${{ needs.build-and-test.outputs.nuget_version }}"
+        echo ""
+        echo "To install this prerelease:"
+        echo "dotnet add package Ambystech.Elaris.UI --version ${{ needs.build-and-test.outputs.nuget_version }}"

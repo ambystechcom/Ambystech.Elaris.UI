@@ -1,6 +1,6 @@
 # Ambystech.Elaris.UI
 
-<img src="assets/logo.png" alt="Elaris" width="200"/>
+![Elaris](icon.png)
 
 [![NuGet](https://img.shields.io/nuget/v/Ambystech.Elaris.UI.svg)](https://www.nuget.org/packages/Ambystech.Elaris.UI/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)

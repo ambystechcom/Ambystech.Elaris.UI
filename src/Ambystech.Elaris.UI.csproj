@@ -12,6 +12,7 @@
     <Version>0.1.0-alpha</Version>
     <Authors>Ambystech</Authors>
     <Company>Ambystech</Company>
+    <Copyright>Copyright © $(Authors) $([System.DateTime]::Now.Year)</Copyright>
     <Description>A lightweight Terminal UI library for .NET with true 24-bit RGB color support. Built for modern terminals with cross-platform support.</Description>
     <PackageTags>tui;terminal;console;ui;ansi;colors;rgb;truecolor;cli</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -20,6 +21,8 @@
     <RepositoryType>git</RepositoryType>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <RootNamespace>Ambystech.Elaris.UI</RootNamespace>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
