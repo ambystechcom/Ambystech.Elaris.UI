@@ -1,0 +1,40 @@
+name: Build and Test
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches-ignore:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: |
+          8.0.x
+          9.0.x
+
+    - name: Restore dependencies
+      run: dotnet restore src/Ambystech.Elaris.UI.csproj
+
+    - name: Build
+      run: dotnet build src/Ambystech.Elaris.UI.csproj --configuration Release --no-restore
+
+    - name: Test
+      run: dotnet test tests/Ambystech.Elaris.UI.Tests.csproj --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx"
+
+    - name: Publish Test Results
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      if: always()
+      with:
+        files: '**/test-results.trx'

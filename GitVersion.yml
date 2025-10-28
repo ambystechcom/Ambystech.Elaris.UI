@@ -1,0 +1,37 @@
+mode: ContinuousDelivery
+branches:
+  main:
+    regex: ^main$
+    mode: ContinuousDelivery
+    tag: ''
+    increment: Patch
+    prevent-increment-of-merged-branch-version: true
+    track-merge-target: false
+    tracks-release-branches: false
+    is-release-branch: true
+  develop:
+    regex: ^dev(elop)?(ment)?$
+    mode: ContinuousDeployment
+    tag: alpha
+    increment: Minor
+    prevent-increment-of-merged-branch-version: false
+    track-merge-target: true
+    tracks-release-branches: true
+    is-release-branch: false
+  feature:
+    regex: ^features?[/-]
+    mode: ContinuousDeployment
+    tag: beta
+    increment: Minor
+    prevent-increment-of-merged-branch-version: false
+    track-merge-target: false
+    tracks-release-branches: false
+    is-release-branch: false
+ignore:
+  sha: []
+merge-message-formats: {}
+major-version-bump-message: "^(\\+semver:\\s?major|BREAKING CHANGE)"
+minor-version-bump-message: "^(\\+semver:\\s?minor|feat)"
+patch-version-bump-message: "^(\\+semver:\\s?patch|fix)"
+no-bump-message: "^(\\+semver:\\s?none|docs|chore|style|refactor|test|build|ci)"
+commit-message-incrementing: Enabled
