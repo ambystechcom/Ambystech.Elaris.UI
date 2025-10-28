@@ -1,0 +1,26 @@
+## .NET Build Artifacts
+bin/
+obj/
+*.user
+*.suo
+*.cache
+
+## NuGet
+*.nupkg
+*.snupkg
+.nuget/
+
+## Visual Studio / Rider
+.vs/
+.idea/
+*.swp
+*.*~
+
+## Test Results
+TestResults/
+coverage/
+*.trx
+
+## OS Files
+.DS_Store
+Thumbs.db
