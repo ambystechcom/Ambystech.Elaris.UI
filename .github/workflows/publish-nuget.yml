@@ -11,8 +11,13 @@ permissions:
   packages: write
 
 jobs:
-  publish:
+  build-and-test:
     runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.modified, '.github/workflows/')"
+    outputs:
+      version: ${{ steps.gitversion.outputs.semVer }}
+      nuget_version: ${{ steps.gitversion.outputs.nuGetVersionV2 }}
+      is_prerelease: ${{ contains(steps.gitversion.outputs.nuGetVersionV2, '-') }}
 
     steps:
     - name: Checkout code
@@ -60,12 +65,35 @@ jobs:
     - name: Pack
       run: dotnet pack src/Ambystech.Elaris.UI.csproj --configuration Release --no-build --output ./artifacts
 
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: nuget-package
+        path: ./artifacts/*.nupkg
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: "!contains(github.event.head_commit.modified, '.github/workflows/')"
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Download artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: nuget-package
+        path: ./artifacts
+
     - name: Create Git Tag
       run: |
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
-        git tag -a "v${{ steps.gitversion.outputs.semVer }}" -m "Release v${{ steps.gitversion.outputs.semVer }}"
-        git push origin "v${{ steps.gitversion.outputs.semVer }}"
+        git tag -a "v${{ needs.build-and-test.outputs.version }}" -m "Release v${{ needs.build-and-test.outputs.version }}"
+        git push origin "v${{ needs.build-and-test.outputs.version }}"
 
     - name: Publish to NuGet
       run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
@@ -89,8 +117,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: v${{ steps.gitversion.outputs.semVer }}
-        release_name: Release v${{ steps.gitversion.outputs.semVer }}
+        tag_name: v${{ needs.build-and-test.outputs.version }}
+        release_name: Release v${{ needs.build-and-test.outputs.version }}
         body: |
           ## Changes in this Release
 
@@ -100,10 +128,10 @@ jobs:
 
           This release is available on NuGet.org:
           ```
-          dotnet add package Ambystech.Elaris.UI --version ${{ steps.gitversion.outputs.nuGetVersionV2 }}
+          dotnet add package Ambystech.Elaris.UI --version ${{ needs.build-and-test.outputs.nuget_version }}
           ```
         draft: false
-        prerelease: ${{ contains(steps.gitversion.outputs.nuGetVersionV2, '-') }}
+        prerelease: ${{ needs.build-and-test.outputs.is_prerelease }}
 
     - name: Upload NuGet package to Release
       uses: actions/upload-release-asset@v1
@@ -111,12 +139,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./artifacts/Ambystech.Elaris.UI.${{ steps.gitversion.outputs.nuGetVersionV2 }}.nupkg
-        asset_name: Ambystech.Elaris.UI.${{ steps.gitversion.outputs.nuGetVersionV2 }}.nupkg
+        asset_path: ./artifacts/Ambystech.Elaris.UI.${{ needs.build-and-test.outputs.nuget_version }}.nupkg
+        asset_name: Ambystech.Elaris.UI.${{ needs.build-and-test.outputs.nuget_version }}.nupkg
         asset_content_type: application/zip
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: nuget-package
-        path: ./artifacts/*.nupkg
