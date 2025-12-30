@@ -1,0 +1,156 @@
+---
+title: Container
+description: A container widget that can hold and layout child widgets
+---
+
+The `Container` widget is a base class for widgets that need to arrange child widgets. It provides automatic layout management with multiple layout modes.
+
+## Overview
+
+`Container` extends `Widget` and adds layout capabilities. It automatically positions and sizes child widgets based on the selected layout mode. Containers don't render anything themselves - they only manage the layout of their children.
+
+## Properties
+
+### `LayoutMode` (LayoutMode)
+
+Controls how child widgets are arranged. Available modes:
+
+- **Absolute**: Children maintain their manually set positions (default)
+- **Vertical**: Children are stacked vertically
+- **Horizontal**: Children are arranged horizontally
+- **Fill**: All children fill the container's available space
+
+```csharp
+container.LayoutMode = LayoutMode.Vertical;
+```
+
+### `Padding` (int)
+
+The padding around child widgets. Applied on all sides.
+
+```csharp
+container.Padding = 2; // 2 characters of padding
+```
+
+### `Spacing` (int)
+
+The spacing between child widgets in flow layouts (Vertical and Horizontal).
+
+```csharp
+container.Spacing = 1; // 1 character between widgets
+```
+
+## Layout Modes
+
+### Absolute Layout
+
+Children maintain their manually set positions. No automatic layout is performed.
+
+```csharp
+container.LayoutMode = LayoutMode.Absolute;
+
+var label1 = new Label("Label 1") { X = 5, Y = 2 };
+var label2 = new Label("Label 2") { X = 5, Y = 5 };
+container.Add(label1);
+container.Add(label2);
+```
+
+### Vertical Layout
+
+Children are stacked vertically, one below another.
+
+```csharp
+container.LayoutMode = LayoutMode.Vertical;
+container.Padding = 1;
+container.Spacing = 1;
+
+container.Add(new Label("First"));
+container.Add(new Label("Second"));
+container.Add(new Label("Third"));
+// Widgets are automatically positioned vertically
+```
+
+### Horizontal Layout
+
+Children are arranged horizontally, side by side.
+
+```csharp
+container.LayoutMode = LayoutMode.Horizontal;
+container.Padding = 1;
+container.Spacing = 1;
+
+container.Add(new Button("OK") { Width = 10 });
+container.Add(new Button("Cancel") { Width = 10 });
+// Widgets are automatically positioned horizontally
+```
+
+### Fill Layout
+
+All children fill the container's available space (minus padding). Useful for overlays or full-screen content.
+
+```csharp
+container.LayoutMode = LayoutMode.Fill;
+container.Padding = 0;
+
+var content = new TextView();
+container.Add(content);
+// content fills the entire container
+```
+
+## Usage Example
+
+```csharp
+var container = new Container
+{
+    X = 0,
+    Y = 0,
+    Width = 80,
+    Height = 24,
+    LayoutMode = LayoutMode.Vertical,
+    Padding = 2,
+    Spacing = 1,
+    BackgroundColor = Color.Black
+};
+
+var header = new Label("Header")
+{
+    Height = 3,
+    ForegroundColor = Color.White,
+    Bold = true
+};
+
+var content = new TextView
+{
+    Height = 15,
+    ForegroundColor = Color.White
+};
+
+var footer = new Label("Footer")
+{
+    Height = 2,
+    ForegroundColor = Color.Gray
+};
+
+container.Add(header);
+container.Add(content);
+container.Add(footer);
+```
+
+## Layout Behavior
+
+- **Automatic Re-layout**: Layout is recalculated when:
+  - `LayoutMode` changes
+  - `Padding` or `Spacing` changes
+  - Container bounds change
+  - Children are added or removed
+
+- **Visible Children Only**: Hidden children (`Visible = false`) are skipped in layout calculations
+
+- **Overflow Handling**: In flow layouts, children that don't fit are not positioned
+
+## Related Widgets
+
+- **[Frame](/widgets/layout/frame)** - Container with borders and title
+- **[Panel](/widgets/layout/panel)** - Collapsible container
+- **[ResponsiveContainer](/widgets/layout/responsive-container)** - Container that responds to window resize
+

@@ -1,0 +1,148 @@
+---
+title: TabContainer
+description: A container widget that manages multiple tabs with tabbed interface
+---
+
+The `TabContainer` widget provides a tabbed interface where users can switch between different content areas using tabs.
+
+## Overview
+
+`TabContainer` extends `Container` and manages multiple `Tab` objects, each containing a `TabContent` widget. Only one tab's content is visible at a time.
+
+## Properties
+
+### `Tabs` (IReadOnlyList\<Tab>)
+
+A read-only list of all tabs in the container.
+
+```csharp
+foreach (var tab in tabContainer.Tabs)
+{
+    Console.WriteLine(tab.Title);
+}
+```
+
+### `ActiveTabIndex` (int)
+
+The index of the currently active tab. Setting this switches to the specified tab.
+
+```csharp
+tabContainer.ActiveTabIndex = 2; // Switch to third tab
+```
+
+### `ActiveTab` (Tab?)
+
+The currently active tab, or `null` if no tab is active.
+
+```csharp
+var activeTab = tabContainer.ActiveTab;
+```
+
+### `TabBarHeight` (int)
+
+The height of the tab bar (default: 1).
+
+```csharp
+tabContainer.TabBarHeight = 1;
+```
+
+### Color Properties
+
+- `ActiveTabBackgroundColor`: Background color of the active tab
+- `ActiveTabForegroundColor`: Text color of the active tab
+- `InactiveTabBackgroundColor`: Background color of inactive tabs
+- `InactiveTabForegroundColor`: Text color of inactive tabs
+- `TabBarBackgroundColor`: Background color of the tab bar
+
+## Methods
+
+### `AddTab(string title)`
+
+Creates and adds a new tab, returning its `TabContent` widget.
+
+```csharp
+var content = tabContainer.AddTab("Settings");
+// Add widgets to content
+content.Add(new Label("Settings content"));
+```
+
+### `RemoveTab(Tab tab)`
+
+Removes a tab from the container.
+
+```csharp
+tabContainer.RemoveTab(tab);
+```
+
+### `RemoveTabAt(int index)`
+
+Removes a tab at the specified index.
+
+```csharp
+tabContainer.RemoveTabAt(0);
+```
+
+## Events
+
+### `TabChanged`
+
+Fired when the active tab changes.
+
+```csharp
+tabContainer.TabChanged += (currentTab, previousTab, currentIndex, previousIndex) =>
+{
+    Console.WriteLine($"Switched to tab: {currentTab.Title}");
+};
+```
+
+## Keyboard Navigation
+
+- **Left Arrow**: Switch to previous tab
+- **Right Arrow**: Switch to next tab
+- **Home**: Switch to first tab
+- **End**: Switch to last tab
+- **Tab**: Switch to next tab (when focused)
+- **Shift+Tab**: Switch to previous tab (when focused)
+
+## Usage Example
+
+```csharp
+var tabContainer = new TabContainer
+{
+    X = 0,
+    Y = 0,
+    Width = 80,
+    Height = 24,
+    ActiveTabBackgroundColor = ColorHelper.FromRgb(0, 120, 212),
+    ActiveTabForegroundColor = Color.White,
+    InactiveTabBackgroundColor = ColorHelper.FromRgb(60, 60, 60),
+    InactiveTabForegroundColor = ColorHelper.FromRgb(180, 180, 180)
+};
+
+// Add tabs
+var dashboardTab = tabContainer.AddTab("Dashboard");
+dashboardTab.Add(new Label("Dashboard content"));
+
+var settingsTab = tabContainer.AddTab("Settings");
+settingsTab.Add(new Label("Settings content"));
+
+// Switch tabs programmatically
+tabContainer.ActiveTabIndex = 0;
+```
+
+## Tab Content
+
+Each tab contains a `TabContent` widget (which extends `Container`). Add your widgets to the `TabContent`:
+
+```csharp
+var tabContent = tabContainer.AddTab("My Tab");
+tabContent.LayoutMode = LayoutMode.Vertical;
+tabContent.Add(new Label("Content"));
+```
+
+## Related Widgets
+
+- **[Container](/widgets/layout/container)** - Base container class
+- **[Tab](/widgets/layout/tabcontainer#tab)** - Individual tab
+- **[TabContent](/widgets/layout/tabcontainer#tabcontent)** - Tab content container
+

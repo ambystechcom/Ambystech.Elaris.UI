@@ -1,0 +1,127 @@
+---
+title: ListBox
+description: A list box widget with selectable items and scrolling support
+---
+
+The `ListBox` widget displays a list of selectable items with keyboard navigation and automatic scrolling.
+
+## Overview
+
+`ListBox` is ideal for displaying lists of options that users can select. It supports scrolling for long lists and provides visual feedback for the selected item.
+
+## Properties
+
+### `Items` (List\<string\>)
+
+The list of items. Use `AddItem()` to add items.
+
+```csharp
+listBox.Items.Add("Item 1");
+```
+
+### `SelectedIndex` (int)
+
+The index of the selected item (-1 if none selected).
+
+```csharp
+listBox.SelectedIndex = 0;
+```
+
+### `SelectedItem` (string?, read-only)
+
+The text of the selected item, or `null` if none selected.
+
+```csharp
+string? selected = listBox.SelectedItem;
+```
+
+### Color Properties
+
+- `SelectionBackgroundColor`: Background color for selected item
+- `SelectionForegroundColor`: Text color for selected item
+- `ScrollbarTrackColor`: Color of scrollbar track
+- `ScrollbarThumbColor`: Color of scrollbar thumb
+
+## Methods
+
+### `AddItem(string item)`
+
+Adds an item to the list.
+
+```csharp
+listBox.AddItem("Apple");
+listBox.AddItem("Banana");
+```
+
+### `RemoveItemAt(int index)`
+
+Removes an item at the specified index.
+
+```csharp
+listBox.RemoveItemAt(0);
+```
+
+### `Clear()`
+
+Clears all items.
+
+```csharp
+listBox.Clear();
+```
+
+## Events
+
+### `SelectionChanged`
+
+Raised when the selected index changes.
+
+```csharp
+listBox.SelectionChanged += (index) =>
+{
+    Console.WriteLine($"Selected index: {index}");
+};
+```
+
+## Keyboard Navigation
+
+- **Up Arrow**: Select previous item
+- **Down Arrow**: Select next item
+- **Home**: Select first item
+- **End**: Select last item
+- **Page Up/Down**: Scroll by page
+- **Tab**: Navigate to next focusable widget
+
+## Usage Example
+
+```csharp
+var listBox = new ListBox
+{
+    X = 10,
+    Y = 5,
+    Width = 30,
+    Height = 10,
+    ForegroundColor = Color.White,
+    BackgroundColor = ColorHelper.FromRgb(30, 30, 30),
+    SelectionBackgroundColor = ColorHelper.FromRgb(50, 100, 150),
+    SelectionForegroundColor = Color.White
+};
+
+listBox.AddItem("Apple");
+listBox.AddItem("Banana");
+listBox.AddItem("Cherry");
+
+listBox.SelectionChanged += (index) =>
+{
+    if (listBox.SelectedItem != null)
+    {
+        Console.WriteLine($"Selected: {listBox.SelectedItem}");
+    }
+};
+```
+
+## Related Widgets
+
+- **[TreeView](/widgets/display/treeview)** - For hierarchical lists
+- **[Table](/widgets/data/table)** - For tabular data
+- **[Base Widget](/widgets/base-widget)** - Base class documentation
+

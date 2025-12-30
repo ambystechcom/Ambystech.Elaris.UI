@@ -1,0 +1,198 @@
+---
+title: Contributing Guide
+description: How to contribute to Elaris.UI
+---
+
+Thank you for your interest in contributing to Elaris.UI! This guide will help you get started.
+
+## How to Contribute
+
+Contributions are welcome! You can contribute in several ways:
+
+- **Bug Reports**: Report bugs by opening an issue
+- **Feature Requests**: Suggest new features
+- **Code Contributions**: Submit pull requests
+- **Documentation**: Improve documentation
+- **Examples**: Add example applications
+
+## Development Setup
+
+### Prerequisites
+
+- .NET SDK 8.0 or 9.0
+- Git
+- A code editor (Visual Studio, VS Code, Rider, etc.)
+
+### Getting the Source
+
+```bash
+git clone https://github.com/ambystechcom/Ambystech.Elaris.UI.git
+cd Ambystech.Elaris.UI/lib
+```
+
+### Building from Source
+
+```bash
+# Restore dependencies
+dotnet restore
+
+# Build the library
+dotnet build
+
+# Run tests
+dotnet test
+```
+
+### Project Structure
+
+```
+lib/
+├── src/              # Source code
+│   ├── Core/        # Core utilities
+│   ├── Enums/       # Enumerations
+│   ├── Input/       # Input handling
+│   ├── Rendering/   # Rendering system
+│   └── Widgets/     # Widget implementations
+├── examples/        # Example applications
+└── tests/          # Unit tests
+```
+
+## Code Style Guidelines
+
+### General
+
+- Use C# 13.0 features where appropriate
+- Follow .NET naming conventions
+- Use meaningful variable and method names
+- Add XML documentation comments for public members
+
+### Formatting
+
+- Use 4 spaces for indentation
+- Use `var` when the type is obvious
+- Use primary constructors where appropriate
+- Keep methods focused and small
+
+### Example
+
+```csharp
+/// <summary>
+/// Creates a new widget with the specified text.
+/// </summary>
+/// <param name="text">The widget text</param>
+public Widget(string text)
+{
+    _text = text ?? string.Empty;
+}
+```
+
+## Testing Requirements
+
+### Writing Tests
+
+- Add unit tests for new features
+- Test edge cases and error conditions
+- Use descriptive test names
+- Follow the existing test structure
+
+### Running Tests
+
+```bash
+dotnet test
+```
+
+### Test Structure
+
+```csharp
+public class MyWidgetTests
+{
+    [Fact]
+    public void MyWidget_Should_Do_Something()
+    {
+        // Arrange
+        var widget = new MyWidget();
+        
+        // Act
+        widget.DoSomething();
+        
+        // Assert
+        Assert.True(widget.SomeProperty);
+    }
+}
+```
+
+## Pull Request Process
+
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature/my-feature`
+3. **Make your changes**
+4. **Add tests** for new functionality
+5. **Update documentation** if needed
+6. **Run tests**: `dotnet test`
+7. **Commit your changes**: `git commit -m "Add feature"`
+8. **Push to your fork**: `git push origin feature/my-feature`
+9. **Open a Pull Request**
+
+### Pull Request Guidelines
+
+- Provide a clear description of changes
+- Reference related issues
+- Ensure all tests pass
+- Update documentation as needed
+- Keep PRs focused and reasonably sized
+
+## Issue Reporting
+
+When reporting issues, please include:
+
+- **Description**: Clear description of the issue
+- **Steps to Reproduce**: How to reproduce the issue
+- **Expected Behavior**: What should happen
+- **Actual Behavior**: What actually happens
+- **Environment**: .NET version, OS, terminal type
+- **Screenshots**: If applicable
+
+## Documentation Contributions
+
+Documentation improvements are always welcome:
+
+- Fix typos or errors
+- Add missing documentation
+- Improve examples
+- Add new examples
+- Clarify confusing sections
+
+## Building the Documentation Site
+
+The documentation site is built with Astro Starlight:
+
+```bash
+cd site
+npm install
+npm run dev    # Development server
+npm run build  # Build for production
+```
+
+## Code of Conduct
+
+- Be respectful and inclusive
+- Welcome newcomers
+- Focus on constructive feedback
+- Help others learn
+
+## Questions?
+
+If you have questions about contributing:
+
+- Open an issue for discussion
+- Check existing issues and PRs
+- Review the codebase to understand patterns
+
+## License
+
+By contributing, you agree that your contributions will be licensed under the MIT License.
+
+## Thank You!
+
+Your contributions help make Elaris.UI better for everyone. Thank you for taking the time to contribute!
+

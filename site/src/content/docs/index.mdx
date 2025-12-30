@@ -1,0 +1,84 @@
+---
+title: Elaris.UI
+description: A lightweight Terminal UI library for .NET with true 24-bit RGB color support
+---
+
+import { Card } from '@astrojs/starlight/components';
+
+<div style="text-align: center; margin: 2rem 0;">
+  <img src="/logo.png" alt="Elaris.UI Logo" style="max-width: 200px; margin: 0 auto;" />
+</div>
+
+Elaris.UI is a lightweight Terminal UI library for .NET that brings modern, beautiful interfaces to the command line. Built with true 24-bit RGB color support and a clean, extensible widget-based architecture.
+
+## Features
+
+<Card title="True 24-bit RGB Color" icon="sun">
+  Full truecolor support via ANSI escape sequences for vibrant, modern terminal applications.
+</Card>
+
+<Card title="Zero Dependencies" icon="approve-check-circle">
+  Pure .NET implementation with no external packages required.
+</Card>
+
+<Card title="Cross-Platform" icon="laptop">
+  Works seamlessly on Windows, macOS, and Linux terminals that support ANSI escape codes.
+</Card>
+
+<Card title="Modern Architecture" icon="setting">
+  Clean, extensible widget-based design that's easy to learn and extend.
+</Card>
+
+<Card title="High Performance" icon="rocket">
+  Double-buffered rendering with minimal overhead for smooth, responsive UIs.
+</Card>
+
+<Card title="Multi-Target" icon="seti:config">
+  Supports .NET 8.0 and .NET 9.0 for maximum compatibility.
+</Card>
+
+## Quick Start
+
+Get started with Elaris.UI in just a few steps:
+
+```csharp
+using Ambystech.Elaris.UI;
+using Ambystech.Elaris.UI.Widgets.Display;
+using Ambystech.Elaris.UI.Widgets.Layout;
+
+var app = new Application();
+
+var frame = new Frame("Hello Elaris!")
+{
+    BorderStyle = BorderStyle.Rounded,
+    ForegroundColor = ColorHelper.FromRgb(100, 200, 255),
+};
+
+var label = new Label("Welcome to Elaris CLI UI Library!")
+{
+    X = 2,
+    Y = 2,
+    Width = 50,
+    Height = 1,
+    ForegroundColor = ColorHelper.FromRgb(255, 200, 100),
+    Bold = true
+};
+
+frame.Add(label);
+app.Run(frame);
+```
+
+## Next Steps
+
+- **[Installation](/installation)** - Learn how to install Elaris.UI from NuGet
+- **[Architecture](/architecture)** - Understand how Elaris.UI works under the hood
+- **[Widgets](/widgets/base-widget)** - Explore the widget system
+- **[Examples](/examples/)** - See Elaris.UI in action
+
+## Cross-Platform Compatibility
+
+Elaris.UI is designed to work seamlessly across Windows, macOS, and Linux terminals that support ANSI escape codes. Ensure your terminal supports truecolor for the best experience.
+
+## License
+
+MIT License - see [LICENSE](https://github.com/ambystechcom/Ambystech.Elaris.UI/blob/main/LICENSE) file for details.

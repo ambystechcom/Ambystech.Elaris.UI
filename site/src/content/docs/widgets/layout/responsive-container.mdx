@@ -1,0 +1,123 @@
+---
+title: ResponsiveContainer
+description: A container that automatically adjusts widget positions when the window is resized
+---
+
+The `ResponsiveContainer` widget is a specialized container that responds to window resize events, allowing you to create responsive layouts that adapt to terminal size changes.
+
+## Overview
+
+`ResponsiveContainer` extends `Container` and provides a callback mechanism that's invoked whenever the container's bounds change. This is perfect for creating applications that adapt to terminal resizing.
+
+## Methods
+
+### `OnResize(Action<int, int> layoutCallback)`
+
+Sets a callback that will be invoked when the container is resized. The callback receives the new width and height.
+
+```csharp
+responsiveContainer.OnResize((width, height) =>
+{
+    // Update widget positions based on new size
+    frame.Width = width;
+    frame.Height = height - 1;
+});
+```
+
+## Usage Example
+
+```csharp
+var root = new ResponsiveContainer
+{
+    BackgroundColor = Color.Black
+};
+
+var frame = new Frame("Responsive App")
+{
+    BorderStyle = BorderStyle.Rounded
+};
+
+var statusBar = new StatusBar
+{
+    Height = 1
+};
+
+root.Add(frame);
+root.Add(statusBar);
+
+// Set up responsive layout
+root.OnResize((width, height) =>
+{
+    // Frame takes most of the space
+    frame.X = 0;
+    frame.Y = 0;
+    frame.Width = width;
+    frame.Height = height - 1;
+    
+    // Status bar at the bottom
+    statusBar.X = 0;
+    statusBar.Y = height - 1;
+    statusBar.Width = width;
+});
+
+app.Run(root);
+```
+
+## Common Patterns
+
+### Full-Screen Layout
+
+```csharp
+root.OnResize((width, height) =>
+{
+    mainContent.Width = width;
+    mainContent.Height = height;
+});
+```
+
+### Header, Content, Footer
+
+```csharp
+root.OnResize((width, height) =>
+{
+    header.Width = width;
+    header.Height = 3;
+    
+    content.Width = width;
+    content.Height = height - 5; // Account for header and footer
+    
+    footer.Y = height - 1;
+    footer.Width = width;
+    footer.Height = 1;
+});
+```
+
+### Sidebar Layout
+
+```csharp
+root.OnResize((width, height) =>
+{
+    sidebar.Width = 20;
+    sidebar.Height = height;
+    
+    mainContent.X = 21;
+    mainContent.Width = width - 21;
+    mainContent.Height = height;
+});
+```
+
+## When to Use
+
+Use `ResponsiveContainer` when:
+
+- Your application needs to adapt to terminal resizing
+- You want widgets to maintain relative positions
+- You need complex layout logic that depends on window size
+
+For simple layouts, regular `Container` with layout modes may be sufficient.
+
+## Related Widgets
+
+- **[Container](/widgets/layout/container)** - Base container class
+- **[Frame](/widgets/layout/frame)** - Often used with ResponsiveContainer
+

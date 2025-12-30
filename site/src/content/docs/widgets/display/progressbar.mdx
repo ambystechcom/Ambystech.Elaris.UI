@@ -1,0 +1,161 @@
+---
+title: ProgressBar
+description: A progress bar widget that displays completion percentage
+---
+
+The `ProgressBar` widget displays a visual progress indicator with optional percentage text.
+
+## Overview
+
+`ProgressBar` shows progress using filled and unfilled portions, with customizable colors and optional percentage display.
+
+## Properties
+
+### `Value` (double)
+
+The current progress value. Must be between `Minimum` and `Maximum`.
+
+```csharp
+progressBar.Value = 50;
+```
+
+### `Minimum` (double)
+
+The minimum value (default: 0).
+
+```csharp
+progressBar.Minimum = 0;
+```
+
+### `Maximum` (double)
+
+The maximum value (default: 100).
+
+```csharp
+progressBar.Maximum = 100;
+```
+
+### `ShowPercentage` (bool)
+
+Whether to display percentage text on the progress bar.
+
+```csharp
+progressBar.ShowPercentage = true;
+```
+
+### `FilledColor` (Color)
+
+Color of the filled portion.
+
+```csharp
+progressBar.FilledColor = Color.Green;
+```
+
+### `UnfilledColor` (Color)
+
+Color of the unfilled portion.
+
+```csharp
+progressBar.UnfilledColor = Color.DarkGray;
+```
+
+### `FilledTextColor` (Color)
+
+Text color for percentage when displayed over filled portion.
+
+```csharp
+progressBar.FilledTextColor = Color.White;
+```
+
+### `PercentageVerticalAlignment` (VerticalAlignment)
+
+Vertical alignment of percentage text.
+
+```csharp
+progressBar.PercentageVerticalAlignment = VerticalAlignment.Middle;
+```
+
+### `PercentageHorizontalAlignment` (HorizontalAlignment)
+
+Horizontal alignment of percentage text.
+
+```csharp
+progressBar.PercentageHorizontalAlignment = HorizontalAlignment.Center;
+```
+
+## Methods
+
+### `Increment(double amount = 1)`
+
+Increments the value by the specified amount.
+
+```csharp
+progressBar.Increment(5);
+```
+
+### `Decrement(double amount = 1)`
+
+Decrements the value by the specified amount.
+
+```csharp
+progressBar.Decrement(5);
+```
+
+### `SetPercentage(double percentage)`
+
+Sets the value to a specific percentage (0-100).
+
+```csharp
+progressBar.SetPercentage(75); // Sets to 75%
+```
+
+## Properties
+
+### `Percentage` (double, read-only)
+
+Gets the current progress as a percentage (0-100).
+
+```csharp
+double percent = progressBar.Percentage;
+```
+
+## Events
+
+### `ValueChanged`
+
+Raised when the value changes.
+
+```csharp
+progressBar.ValueChanged += (value) =>
+{
+    Console.WriteLine($"Progress: {value}");
+};
+```
+
+## Usage Example
+
+```csharp
+var progressBar = new ProgressBar
+{
+    X = 10,
+    Y = 5,
+    Width = 50,
+    Height = 1,
+    Value = 42,
+    ShowPercentage = true,
+    FilledColor = ColorHelper.FromRgb(100, 200, 100),
+    UnfilledColor = ColorHelper.FromRgb(50, 50, 50),
+    FilledTextColor = Color.White
+};
+
+// Update progress
+progressBar.Value = 75;
+progressBar.Increment(10);
+progressBar.SetPercentage(90);
+```
+
+## Related Widgets
+
+- **[Label](/widgets/display/label)** - For displaying text labels
+- **[Base Widget](/widgets/base-widget)** - Base class documentation
+

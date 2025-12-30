@@ -1,0 +1,102 @@
+---
+title: Interactive Example
+description: Showcasing interactive widgets and responsive layout
+---
+
+The Interactive example demonstrates various interactive widgets working together, including buttons with different styles, checkboxes, list boxes, and progress bars.
+
+## What It Demonstrates
+
+- Multiple button styles (Standard, Outline, Gradient)
+- Checkbox widgets with event handling
+- ListBox with selection
+- ProgressBar widgets
+- ResponsiveContainer for adaptive layouts
+- Event handling and state management
+
+## Key Features
+
+### Button Styles
+
+```csharp
+// Standard button
+var button1 = new Button("Button 1")
+{
+    Style = ButtonStyle.Rounded,
+    BackgroundColor = ColorHelper.FromRgb(66, 135, 245)
+};
+
+// Outline button
+var button2 = new Button("Button 2")
+{
+    Style = ButtonStyle.Outline,
+    BorderColor = ColorHelper.FromRgb(66, 135, 245)
+};
+
+// Gradient button
+var button3 = new Button("Button 3")
+{
+    Style = ButtonStyle.Gradient,
+    GradientStartColor = ColorHelper.FromRgb(91, 192, 235),
+    GradientEndColor = ColorHelper.FromRgb(76, 162, 213)
+};
+```
+
+### Checkboxes with Events
+
+```csharp
+var checkbox = new Checkbox("Enable feature A");
+checkbox.CheckedChanged += (isChecked) =>
+{
+    statusBar.LeftText = $"Feature A: {(isChecked ? "ON" : "OFF")}";
+};
+```
+
+### ListBox Selection
+
+```csharp
+var listBox = new ListBox();
+listBox.AddItem("Apple");
+listBox.AddItem("Banana");
+
+listBox.SelectionChanged += (index) =>
+{
+    statusBar.RightText = $"Selected: {listBox.SelectedItem}";
+};
+```
+
+### Responsive Layout
+
+```csharp
+var root = new ResponsiveContainer();
+root.OnResize((width, height) =>
+{
+    // Adjust widget positions based on window size
+    mainFrame.Width = width - (margin * 2);
+    mainFrame.Height = height - margin - 2;
+    // ... layout logic
+});
+```
+
+## Running the Example
+
+```bash
+cd examples/Elaris.Examples.Interactive
+dotnet run
+```
+
+## Learning Points
+
+- Different button styles provide visual variety
+- Event handlers allow widgets to communicate
+- ResponsiveContainer adapts to window resizing
+- Multiple widgets can work together in a single interface
+
+## Related Widgets
+
+- **[Button](/widgets/input/button)** - Button widget
+- **[Checkbox](/widgets/input/checkbox)** - Checkbox widget
+- **[ListBox](/widgets/input/listbox)** - List box widget
+- **[ProgressBar](/widgets/display/progressbar)** - Progress bar widget
+- **[ResponsiveContainer](/widgets/layout/responsive-container)** - Responsive layout
+

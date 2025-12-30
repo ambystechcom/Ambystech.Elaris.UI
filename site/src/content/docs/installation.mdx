@@ -1,0 +1,182 @@
+---
+title: Installation & Setup
+description: Learn how to install and set up Elaris.UI in your .NET project
+---
+
+## Prerequisites
+
+Before installing Elaris.UI, ensure you have:
+
+- **.NET SDK 8.0 or 9.0** installed
+- A terminal that supports **ANSI escape codes** and **truecolor** (24-bit RGB)
+  - Windows: Windows Terminal (recommended), PowerShell 7+, or modern terminal emulators
+  - macOS: iTerm2 (recommended), Terminal.app
+  - Linux: Most modern terminal emulators (GNOME Terminal, Konsole, etc.)
+
+## Installation
+
+### NuGet Package Manager
+
+Install Elaris.UI using the NuGet Package Manager in Visual Studio:
+
+1. Right-click on your project in Solution Explorer
+2. Select **Manage NuGet Packages...**
+3. Search for `Ambystech.Elaris.UI`
+4. Click **Install**
+
+### Package Manager Console
+
+```powershell
+Install-Package Ambystech.Elaris.UI
+```
+
+### .NET CLI
+
+```bash
+dotnet add package Ambystech.Elaris.UI
+```
+
+### Manual Package Reference
+
+Add the package reference directly to your `.csproj` file:
+
+```xml
+<ItemGroup>
+  <PackageReference Include="Ambystech.Elaris.UI" Version="0.1.0-alpha" />
+</ItemGroup>
+```
+
+Then restore packages:
+
+```bash
+dotnet restore
+```
+
+## First Steps
+
+After installation, you're ready to create your first Elaris.UI application!
+
+### 1. Add Required Usings
+
+```csharp
+using Ambystech.Elaris.UI;
+using Ambystech.Elaris.UI.Widgets.Display;
+using Ambystech.Elaris.UI.Widgets.Layout;
+using Ambystech.Elaris.UI.Core;
+using Ambystech.Elaris.UI.Enums;
+using System.Drawing;
+```
+
+### 2. Create Your First Application
+
+```csharp
+var app = new Application();
+
+var frame = new Frame("Hello Elaris!")
+{
+    BorderStyle = BorderStyle.Rounded,
+    ForegroundColor = ColorHelper.FromRgb(100, 200, 255),
+};
+
+var label = new Label("Welcome to Elaris!")
+{
+    X = 2,
+    Y = 2,
+    Width = 50,
+    Height = 1,
+    ForegroundColor = ColorHelper.FromRgb(255, 200, 100),
+    Bold = true
+};
+
+frame.Add(label);
+app.Run(frame);
+```
+
+### 3. Run Your Application
+
+```bash
+dotnet run
+```
+
+## Terminal Configuration
+
+### Windows Terminal
+
+Windows Terminal has excellent support for ANSI escape codes and truecolor. No additional configuration needed.
+
+### PowerShell
+
+Ensure you're using PowerShell 7+ for best compatibility. PowerShell 5.1 has limited ANSI support.
+
+### macOS Terminal
+
+For the best experience on macOS, use **iTerm2** which has full truecolor support. Terminal.app also works but may have limited color support.
+
+### Linux
+
+Most modern Linux terminal emulators support truecolor. If colors don't appear correctly, check your terminal's color settings.
+
+## Verifying Installation
+
+To verify that Elaris.UI is installed correctly, try running the Hello World example:
+
+```csharp
+using Ambystech.Elaris.UI;
+using Ambystech.Elaris.UI.Widgets.Display;
+using Ambystech.Elaris.UI.Widgets.Layout;
+using Ambystech.Elaris.UI.Core;
+using Ambystech.Elaris.UI.Enums;
+using System.Drawing;
+
+var app = new Application();
+
+var frame = new Frame("Installation Test")
+{
+    BorderStyle = BorderStyle.Rounded,
+    ForegroundColor = ColorHelper.FromRgb(100, 200, 255),
+};
+
+var label = new Label("Elaris.UI is installed correctly!")
+{
+    X = 2,
+    Y = 2,
+    Width = 50,
+    Height = 1,
+    ForegroundColor = Color.Green,
+    Bold = true
+};
+
+frame.Add(label);
+app.Run(frame);
+```
+
+If you see a colored frame with text, your installation is successful!
+
+## Troubleshooting
+
+### Colors Not Displaying
+
+- Ensure your terminal supports truecolor (24-bit RGB)
+- Check that your terminal is not in compatibility mode
+- Try using a different terminal emulator
+
+### Package Not Found
+
+- Verify you're using .NET 8.0 or 9.0
+- Check your NuGet package source configuration
+- Ensure you have an internet connection for package restore
+
+### Build Errors
+
+- Run `dotnet restore` to restore packages
+- Ensure all required using statements are included
+- Check that your project targets .NET 8.0 or 9.0
+
+## Next Steps
+
+Now that you have Elaris.UI installed:
+
+- **[Architecture](/architecture)** - Learn how Elaris.UI works
+- **[Base Widget](/widgets/base-widget)** - Understand the widget system
+- **[Examples](/examples/)** - Explore example applications
+

@@ -1,0 +1,105 @@
+---
+title: Frame
+description: A frame widget with borders and an optional title
+---
+
+The `Frame` widget is a container with decorative borders and an optional title. It's perfect for grouping related widgets and creating visual sections.
+
+## Overview
+
+`Frame` extends `Container` and adds border rendering and title display. It's one of the most commonly used widgets for creating structured layouts.
+
+## Properties
+
+### `Title` (string)
+
+The title displayed at the top of the frame.
+
+```csharp
+frame.Title = "Settings";
+```
+
+### `BorderStyle` (BorderStyle)
+
+The style of the border. Available styles:
+
+- **Single**: Single-line borders (default)
+- **Double**: Double-line borders
+- **Rounded**: Rounded corners
+- **None**: No border
+
+```csharp
+frame.BorderStyle = BorderStyle.Rounded;
+```
+
+### `BorderColor` (Color)
+
+The color of the border. If not set, uses `ForegroundColor`.
+
+```csharp
+frame.BorderColor = ColorHelper.FromRgb(100, 200, 255);
+```
+
+### `CornerRadius` (int)
+
+When greater than 0, corners will be rounded. Only affects Single and Double border styles.
+
+```csharp
+frame.CornerRadius = 2;
+```
+
+## Usage Example
+
+```csharp
+var frame = new Frame("My Application")
+{
+    X = 5,
+    Y = 3,
+    Width = 70,
+    Height = 20,
+    BorderStyle = BorderStyle.Rounded,
+    ForegroundColor = ColorHelper.FromRgb(100, 200, 255),
+    BackgroundColor = Color.Black,
+    BorderColor = ColorHelper.FromRgb(100, 200, 255)
+};
+
+var label = new Label("Content goes here")
+{
+    X = 2,
+    Y = 2,
+    Width = 65,
+    Height = 1,
+    ForegroundColor = Color.White
+};
+
+frame.Add(label);
+```
+
+## Border Styles
+
+### Single Border
+
+```csharp
+frame.BorderStyle = BorderStyle.Single;
+// Uses: ┌ ┐ └ ┘ │ ─
+```
+
+### Double Border
+
+```csharp
+frame.BorderStyle = BorderStyle.Double;
+// Uses: ╔ ╗ ╚ ╝ ║ ═
+```
+
+### Rounded Border
+
+```csharp
+frame.BorderStyle = BorderStyle.Rounded;
+// Uses: ╭ ╮ ╰ ╯ │ ─
+```
+
+## Related Widgets
+
+- **[Container](/widgets/layout/container)** - Base container class
+- **[Panel](/widgets/layout/panel)** - Collapsible frame
+

@@ -1,0 +1,97 @@
+---
+title: Table Columns
+description: Understanding TableColumn, TableRow, and TableCell
+---
+
+Tables in Elaris.UI are built using `TableColumn`, `TableRow`, and `TableCell` classes. Understanding these is essential for working with tables.
+
+## TableColumn
+
+`TableColumn` defines a column in the table, including its name, width, and how to extract data from row objects.
+
+### Properties
+
+- `Name`: Column name (displayed in header)
+- `Width`: Column width in characters
+- `MinWidth`: Minimum column width
+- `Alignment`: Text alignment (Left, Center, Right)
+- `IsVisible`: Whether the column is visible
+- `PropertyName`: Property name to bind to
+
+### Binding Data
+
+#### Bind to Property Name
+
+```csharp
+table.AddColumn("Name", 20).BindTo("FullName");
+```
+
+#### Bind with Lambda
+
+```csharp
+table.AddColumn("Age", 10).BindTo<Person>(p => p.Age);
+```
+
+#### Custom Value Getter
+
+```csharp
+var column = new TableColumn("Display", 20);
+column.ValueGetter = obj => obj is Person p ? $"{p.FirstName} {p.LastName}" : null;
+table.AddColumn(column);
+```
+
+## TableRow
+
+`TableRow` represents a single row in the table.
+
+### Properties
+
+- `Data`: The data object associated with the row
+- `Index`: The row index
+- `Cells`: Dictionary of cells by column
+
+### Accessing Cells
+
+```csharp
+var cell = row.GetCell(column);
+cell.Value = "New Value";
+```
+
+## TableCell
+
+`TableCell` represents a single cell in the table.
+
+### Properties
+
+- `Value`: The cell value
+- `Column`: The associated column
+- `Row`: The associated row
+
+### Rendering
+
+Cells are automatically rendered by the table. You can customize rendering by creating custom cell types (see Specialized Columns).
+
+## Usage Example
+
+```csharp
+// Create columns
+var nameColumn = new TableColumn("Name", 30);
+var ageColumn = new TableColumn("Age", 10).BindTo<Person>(p => p.Age);
+
+table.AddColumn(nameColumn);
+table.AddColumn(ageColumn);
+
+// Add rows
+var row1 = table.AddRow(new Person("Alice", 30));
+var row2 = table.AddRow(new Person("Bob", 25));
+
+// Access cell values
+var cell = row1.GetCell(nameColumn);
+cell.Value = "Alice Smith";
+```
+
+## Related Widgets
+
+- **[Table](/widgets/data/table)** - Main table widget
+- **[Specialized Columns](/widgets/data/table-specialized)** - CheckboxColumn, ProgressColumn
+

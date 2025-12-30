@@ -1,0 +1,29 @@
+---
+title: MenuDropdown
+description: Internal widget for displaying dropdown menus
+---
+
+`MenuDropdown` is an internal widget used by `MenuBar` to display dropdown menus. You typically don't need to use this directly.
+
+## Overview
+
+`MenuDropdown` is automatically created and managed by `MenuBar` when a menu item with subitems is activated. It handles the visual display and keyboard navigation of dropdown menus.
+
+## Usage
+
+`MenuDropdown` is created automatically when you open a menu with subitems:
+
+```csharp
+var menuBar = new MenuBar();
+menuBar.AddMenu("File",
+    new MenuItem("New"),
+    new MenuItem("Open")
+);
+// MenuDropdown is created automatically when "File" is opened
+```
+
+## Related Widgets
+
+- **[MenuBar](/widgets/menu/menubar)** - Creates and manages MenuDropdown
+- **[MenuItem](/widgets/menu/menuitem)** - Items displayed in dropdown
+

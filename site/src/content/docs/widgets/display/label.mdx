@@ -1,0 +1,100 @@
+---
+title: Label
+description: A simple text label widget
+---
+
+The `Label` widget displays text with support for styling and alignment options.
+
+## Overview
+
+`Label` is one of the most basic widgets in Elaris.UI. It's used to display static or dynamic text with various formatting options.
+
+## Properties
+
+### `Text` (string)
+
+The text to display. Supports multi-line text (use `\n` for line breaks).
+
+```csharp
+label.Text = "Hello, World!";
+label.Text = "Line 1\nLine 2";
+```
+
+### `Bold` (bool)
+
+Whether the text is displayed in bold.
+
+```csharp
+label.Bold = true;
+```
+
+### `Italic` (bool)
+
+Whether the text is displayed in italic.
+
+```csharp
+label.Italic = true;
+```
+
+### `Underline` (bool)
+
+Whether the text is displayed with underline.
+
+```csharp
+label.Underline = true;
+```
+
+### `HorizontalAlignment` (HorizontalAlignment)
+
+Horizontal text alignment:
+- `Left` (default)
+- `Center`
+- `Right`
+
+```csharp
+label.HorizontalAlignment = HorizontalAlignment.Center;
+```
+
+### `VerticalAlignment` (VerticalAlignment)
+
+Vertical text alignment:
+- `Top` (default)
+- `Middle`
+- `Bottom`
+
+```csharp
+label.VerticalAlignment = VerticalAlignment.Middle;
+```
+
+## Usage Example
+
+```csharp
+var label = new Label("Welcome to Elaris!")
+{
+    X = 10,
+    Y = 5,
+    Width = 50,
+    Height = 3,
+    ForegroundColor = ColorHelper.FromRgb(255, 200, 100),
+    BackgroundColor = Color.Black,
+    Bold = true,
+    HorizontalAlignment = HorizontalAlignment.Center,
+    VerticalAlignment = VerticalAlignment.Middle
+};
+```
+
+## Multi-line Text
+
+Labels support multi-line text:
+
+```csharp
+label.Text = "First line\nSecond line\nThird line";
+```
+
+Each line is aligned according to `HorizontalAlignment` and `VerticalAlignment`.
+
+## Related Widgets
+
+- **[TextView](/widgets/display/textview)** - For scrollable multi-line text
+- **[Base Widget](/widgets/base-widget)** - Base class documentation
+

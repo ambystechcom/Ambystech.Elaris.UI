@@ -1,0 +1,98 @@
+---
+title: Checkbox
+description: A checkbox widget with a label
+---
+
+The `Checkbox` widget provides a boolean input option with a visual checkbox and optional label.
+
+## Overview
+
+`Checkbox` displays a checkable box with a label. It supports keyboard activation and provides visual feedback for checked and focus states.
+
+## Properties
+
+### `IsChecked` (bool)
+
+Whether the checkbox is checked.
+
+```csharp
+checkbox.IsChecked = true;
+```
+
+### `Label` (string)
+
+The checkbox label text.
+
+```csharp
+checkbox.Label = "Enable feature";
+```
+
+### `BracketColor` (Color)
+
+Color of the checkbox brackets (default: Yellow).
+
+```csharp
+checkbox.BracketColor = Color.Yellow;
+```
+
+### `CheckmarkColor` (Color)
+
+Color of the checkmark when checked (default: Green).
+
+```csharp
+checkbox.CheckmarkColor = Color.Green;
+```
+
+## Events
+
+### `CheckedChanged`
+
+Raised when the checked state changes.
+
+```csharp
+checkbox.CheckedChanged += (isChecked) =>
+{
+    Console.WriteLine($"Checked: {isChecked}");
+};
+```
+
+## Methods
+
+### `Toggle()`
+
+Toggles the checkbox state.
+
+```csharp
+checkbox.Toggle();
+```
+
+## Keyboard Interaction
+
+- **Space** or **Enter**: Toggle checked state
+- **Tab**: Navigate to next focusable widget
+
+## Usage Example
+
+```csharp
+var checkbox = new Checkbox("Enable notifications")
+{
+    X = 10,
+    Y = 5,
+    Width = 30,
+    Height = 1,
+    ForegroundColor = Color.White,
+    IsChecked = false
+};
+
+checkbox.CheckedChanged += (isChecked) =>
+{
+    Console.WriteLine($"Notifications: {(isChecked ? "ON" : "OFF")}");
+};
+```
+
+## Related Widgets
+
+- **[Button](/widgets/input/button)** - For action buttons
+- **[ListBox](/widgets/input/listbox)** - For multiple selections
+- **[Base Widget](/widgets/base-widget)** - Base class documentation
+

@@ -1,0 +1,67 @@
+---
+title: Widgets Showcase Example
+description: Comprehensive showcase of widget types
+---
+
+The Widgets Showcase example demonstrates various widget types and their features in a single application.
+
+## What It Demonstrates
+
+- Multiple widget types
+- Different label styles (normal, bold, italic)
+- TextView with scrolling
+- StatusBar usage
+- Container layout modes
+- Widget styling options
+
+## Key Features
+
+### Label Styles
+
+```csharp
+var normalLabel = new Label("Normal Label");
+var boldLabel = new Label("Bold Label") { Bold = true };
+var italicLabel = new Label("Italic Label") { Italic = true };
+```
+
+### TextView
+
+```csharp
+var textView = new TextView();
+textView.AppendLine("This is a scrollable text view.");
+textView.AppendLine("You can add multiple lines of text.");
+textView.AppendLine("Use Arrow keys to scroll up/down.");
+```
+
+### Container Layout
+
+```csharp
+var container = new Container
+{
+    LayoutMode = LayoutMode.Vertical,
+    Padding = 1,
+    Spacing = 1
+};
+```
+
+## Running the Example
+
+```bash
+cd examples/Elaris.Examples.Widgets
+dotnet run
+```
+
+## Learning Points
+
+- Different widgets serve different purposes
+- Labels support various text styles
+- TextView provides scrolling for long content
+- Containers organize widgets efficiently
+
+## Related Widgets
+
+- **[Label](/widgets/display/label)** - Text labels
+- **[TextView](/widgets/display/textview)** - Scrollable text
+- **[Container](/widgets/layout/container)** - Container widget
+- **[StatusBar](/widgets/layout/statusbar)** - Status bar
+
