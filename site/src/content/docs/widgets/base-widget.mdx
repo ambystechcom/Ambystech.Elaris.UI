@@ -47,35 +47,85 @@ classDiagram
         #virtual bool OnKeyPress(ConsoleKeyInfo)
         #virtual bool OnMouseClick(Point)
     }
-    
+
     class Container {
         +LayoutMode LayoutMode
         +int Padding
         +int Spacing
     }
-    
     class Frame {
         +string Title
         +BorderStyle BorderStyle
     }
-    
+    class Panel
+    class TabContainer
+    class TabContent
+    class ResponsiveContainer
+
     class Label {
         +string Text
         +bool Bold
         +bool Italic
     }
-    
+    class ProgressBar
+    class TreeView
+    class TextView
+
     class Button {
         +string Text
         +ButtonStyle Style
         +event Action Click
     }
-    
+    class Checkbox
+    class ListBox
+    class TextField
+    class AutoCompleteTextField
+    class Editor {
+        +string Text
+        +bool ShowLineNumbers
+    }
+    class CodeEditor {
+        +string Language
+        +string Theme
+        +bool SyntaxHighlighting
+    }
+
+    class Table
+    class StatusBar
+    class MenuBar
+
     Widget <|-- Container
     Container <|-- Frame
+    Frame <|-- Panel
+    Container <|-- TabContainer
+    Container <|-- TabContent
+    Container <|-- ResponsiveContainer
+
     Widget <|-- Label
+    Widget <|-- ProgressBar
+    Widget <|-- TreeView
+    Widget <|-- TextView
+
     Widget <|-- Button
+    Widget <|-- Checkbox
+    Widget <|-- ListBox
+    Widget <|-- TextField
+    TextField <|-- AutoCompleteTextField
+    Widget <|-- Editor
+    Editor <|-- CodeEditor
+
+    Widget <|-- Table
+    Widget <|-- StatusBar
+    Widget <|-- MenuBar
 ```
+
+The diagram groups widgets by category:
+
+- **Layout** — `Container`, `Frame`, `Panel`, `TabContainer`, `TabContent`, `ResponsiveContainer`
+- **Display** — `Label`, `ProgressBar`, `TreeView`, `TextView`
+- **Input** — `Button`, `Checkbox`, `ListBox`, `TextField`, `AutoCompleteTextField`, `Editor`, `CodeEditor`
+- **Data** — `Table`
+- **Chrome** — `StatusBar`, `MenuBar`
 
 ## Properties
 

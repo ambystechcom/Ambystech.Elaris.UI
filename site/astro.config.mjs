@@ -73,6 +73,8 @@ export default defineConfig({
 								{ label: 'AutoCompleteTextField', link: '/widgets/input/autocomplete-textfield' },
 								{ label: 'Checkbox', link: '/widgets/input/checkbox' },
 								{ label: 'ListBox', link: '/widgets/input/listbox' },
+								{ label: 'Editor', link: '/widgets/input/editor' },
+								{ label: 'CodeEditor', link: '/widgets/input/code-editor' },
 							],
 						},
 						{
@@ -91,6 +93,13 @@ export default defineConfig({
 								{ label: 'MenuDropdown', link: '/widgets/menu/menudropdown' },
 							],
 						},
+					],
+				},
+				{
+					label: 'Packages',
+					items: [
+						{ label: 'Overview', link: '/packages/' },
+						{ label: 'CodeEditor Plugins', link: '/packages/code-editor-plugins' },
 					],
 				},
 				{
