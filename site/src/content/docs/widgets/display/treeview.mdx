@@ -1,0 +1,157 @@
+---
+title: TreeView
+description: A tree view widget for displaying hierarchical data with keyboard navigation
+---
+
+The `TreeView` widget displays hierarchical data in a tree structure with expandable/collapsible nodes and keyboard navigation.
+
+## Overview
+
+`TreeView` is ideal for displaying file systems, organizational structures, or any hierarchical data. It supports keyboard navigation, node expansion/collapse, and selection.
+
+## Properties
+
+### `RootNodes` (List\<TreeNode\>)
+
+The root nodes of the tree.
+
+```csharp
+treeView.RootNodes = new List<TreeNode>
+{
+    new TreeNode("Documents"),
+    new TreeNode("Pictures")
+};
+```
+
+### `SelectedNode` (TreeNode?)
+
+The currently selected node.
+
+```csharp
+var selected = treeView.SelectedNode;
+```
+
+### `ShowIcons` (bool)
+
+Whether to show node icons (default: true).
+
+```csharp
+treeView.ShowIcons = true;
+```
+
+### `IndentSize` (int)
+
+The indentation size per level (default: 2).
+
+```csharp
+treeView.IndentSize = 2;
+```
+
+### Color Properties
+
+- `SelectionBackgroundColor`: Background color for selected node
+- `SelectionForegroundColor`: Text color for selected node
+- `ConnectorColor`: Color for tree connectors
+
+### Indicator Properties
+
+- `ExpandedIndicator`: Character for expanded nodes (default: "▼")
+- `CollapsedIndicator`: Character for collapsed nodes (default: "▶")
+
+## Events
+
+### `SelectionChanged`
+
+Raised when the selected node changes.
+
+```csharp
+treeView.SelectionChanged += (node) =>
+{
+    Console.WriteLine($"Selected: {node?.Text}");
+};
+```
+
+### `NodeExpanded`
+
+Raised when a node is expanded.
+
+```csharp
+treeView.NodeExpanded += (node) =>
+{
+    Console.WriteLine($"Expanded: {node.Text}");
+};
+```
+
+### `NodeCollapsed`
+
+Raised when a node is collapsed.
+
+```csharp
+treeView.NodeCollapsed += (node) =>
+{
+    Console.WriteLine($"Collapsed: {node.Text}");
+};
+```
+
+### `NodeActivated`
+
+Raised when Enter is pressed on a node.
+
+```csharp
+treeView.NodeActivated += (node) =>
+{
+    Console.WriteLine($"Activated: {node.Text}");
+};
+```
+
+## Keyboard Navigation
+
+- **Up Arrow**: Move to previous node
+- **Down Arrow**: Move to next node
+- **Left Arrow**: Collapse node or move to parent
+- **Right Arrow**: Expand node or move to first child
+- **Enter**: Toggle expansion or activate node
+- **Home**: Move to first node
+- **End**: Move to last node
+- **Page Up/Down**: Scroll by page
+
+## Usage Example
+
+```csharp
+var treeView = new TreeView
+{
+    X = 5,
+    Y = 5,
+    Width = 40,
+    Height = 20,
+    SelectionBackgroundColor = ColorHelper.FromRgb(50, 100, 150),
+    SelectionForegroundColor = Color.White
+};
+
+var root = new TreeNode("Root")
+{
+    Icon = "📁"
+};
+
+var child1 = new TreeNode("Child 1")
+{
+    Icon = "📄"
+};
+
+var child2 = new TreeNode("Child 2")
+{
+    Icon = "📄"
+};
+
+root.AddChild(child1);
+root.AddChild(child2);
+
+treeView.RootNodes = new List<TreeNode> { root };
+```
+
+## Related Widgets
+
+- **[TreeNode](/widgets/display/treeview#treenode)** - Individual tree nodes
+- **[ListBox](/widgets/input/listbox)** - For flat lists
+- **[Base Widget](/widgets/base-widget)** - Base class documentation
+

@@ -1,0 +1,136 @@
+---
+title: CodeEditor Plugins
+description: File-based syntax highlighting plugins for the Elaris.UI CodeEditor widget
+---
+
+`Ambystech.Elaris.UI.CodeEditor.Plugins` is an **optional** package that extends the [`CodeEditor`](/widgets/input/code-editor) widget with JSON-driven syntax rules and themes. Languages and color schemes can be added without recompiling — drop a JSON file into a directory and register it at startup.
+
+## Overview
+
+The core `CodeEditor` ships with built-in rules for `csharp`, `javascript`, and `python`, plus a `default` theme. This package adds two providers that plug into `PluginManager`:
+
+- **`JsonSyntaxRuleProvider`** — loads language rules from `.json` files in a directory.
+- **`JsonThemeProvider`** — loads color themes from `.json` files in a directory.
+
+Both providers are **lazy** (files are parsed on first use), **cached** (in memory per process), and **thread-safe**. When a language or theme isn't found in the plugin directory, `CodeEditor` transparently falls back to the built-in provider.
+
+## Installation
+
+```bash
+dotnet add package Ambystech.Elaris.UI.CodeEditor.Plugins
+```
+
+The package targets **.NET 8** and **.NET 9** and depends on the core `Ambystech.Elaris.UI` library.
+
+## Initialization
+
+Call `PluginInitializer.Initialize` once at startup, pointing it at the directories that contain your JSON files. Either argument may be `null` if you only need one kind of plugin.
+
+```csharp
+using Ambystech.Elaris.UI.CodeEditor.Plugins;
+
+PluginInitializer.Initialize(
+    syntaxRulesDirectory: "plugins/syntax",
+    themesDirectory: "plugins/themes"
+);
+```
+
+After initialization, any `CodeEditor` instance can reference the new languages and themes by name:
+
+```csharp
+var codeEditor = new CodeEditor
+{
+    Language = "rust",    // loaded from plugins/syntax/rust.json
+    Theme = "monokai"     // loaded from plugins/themes/monokai.json
+};
+```
+
+## Directory Layout
+
+The file name (without extension) is the identifier used at runtime:
+
+```
+plugins/
+├── syntax/
+│   ├── rust.json
+│   ├── go.json
+│   └── ...
+└── themes/
+    ├── monokai.json
+    ├── solarized.json
+    └── ...
+```
+
+## Syntax Rule Files
+
+Each syntax rule file describes how to tokenize a single language.
+
+```json
+{
+  "language": "rust",
+  "keywords": ["fn", "let", "mut", "pub", "struct", "enum"],
+  "stringDelimiters": ["\"", "r#\""],
+  "commentPatterns": ["//.*", "/\\*.*?\\*/"],
+  "numberPattern": "\\b\\d+(\\.\\d+)?\\b",
+  "bracketPairs": {
+    "(": ")",
+    "[": "]",
+    "{": "}"
+  }
+}
+```
+
+| Field              | Type                     | Description                                                       |
+| ------------------ | ------------------------ | ----------------------------------------------------------------- |
+| `language`         | string                   | The identifier used in `CodeEditor.Language`.                     |
+| `keywords`         | string[]                 | Reserved words highlighted as keywords.                           |
+| `stringDelimiters` | string[]                 | Delimiter pairs that open and close string literals.              |
+| `commentPatterns`  | string[] (regex)         | Patterns matched against the start of remaining text on a line.   |
+| `numberPattern`    | string (regex)           | Pattern used to detect numeric literals.                          |
+| `bracketPairs`     | object (char → char)     | Opening-to-closing bracket mapping used for bracket matching.     |
+
+## Theme Files
+
+Each theme file maps token types to 24-bit RGB colors.
+
+```json
+{
+  "name": "monokai",
+  "displayName": "Monokai",
+  "colors": {
+    "Keyword":    { "r": 249, "g":  38, "b": 114 },
+    "String":     { "r": 230, "g": 219, "b": 116 },
+    "Comment":    { "r": 117, "g": 113, "b":  94 },
+    "Number":     { "r": 174, "g": 129, "b": 255 },
+    "Operator":   { "r": 248, "g": 248, "b": 242 },
+    "Identifier": { "r": 248, "g": 248, "b": 242 }
+  }
+}
+```
+
+| Field         | Type            | Description                                                                         |
+| ------------- | --------------- | ----------------------------------------------------------------------------------- |
+| `name`        | string          | The identifier used in `CodeEditor.Theme`.                                          |
+| `displayName` | string          | Human-readable label (used by tools and demos).                                     |
+| `colors`      | object          | Token-type name → `{ r, g, b }` color. Unmapped token types fall back to the widget's `ForegroundColor`. |
+
+### Supported Token Types
+
+- `Keyword` — language keywords
+- `String` — string literals
+- `Comment` — line and block comments
+- `Number` — numeric literals
+- `Operator` — operators and punctuation
+- `Identifier` — identifiers and variable names
+
+## Behavior Notes
+
+- **Lazy loading.** JSON files are parsed the first time a language or theme is requested, not at registration time. Invalid files fail on first use, not at startup.
+- **Caching.** Parsed rules and themes are cached in memory for the lifetime of the process.
+- **Fallback.** When a requested language or theme isn't found in any registered provider, `CodeEditor` falls back to the built-ins (`csharp` / `default`).
+- **Multiple providers.** You may register the JSON providers alongside custom providers; `PluginManager` resolves requests in registration order.
+
+## Related
+
+- **[CodeEditor widget](/widgets/input/code-editor)** — the editor widget these plugins extend.
+- **[Packages overview](/packages/)** — other optional packages.

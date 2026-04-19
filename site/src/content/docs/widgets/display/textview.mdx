@@ -1,0 +1,138 @@
+---
+title: TextView
+description: A multi-line scrollable text view widget
+---
+
+The `TextView` widget displays multi-line text with scrolling capabilities. Perfect for logs, chat messages, or any scrollable text content.
+
+## Overview
+
+`TextView` maintains a list of text lines and provides scrolling functionality. It's ideal for displaying logs, chat messages, or any content that may exceed the visible area.
+
+## Properties
+
+### `AutoScroll` (bool)
+
+Whether to automatically scroll to the bottom when new lines are added (default: true).
+
+```csharp
+textView.AutoScroll = true;
+```
+
+### `WordWrap` (bool)
+
+Whether to wrap long lines (default: false).
+
+```csharp
+textView.WordWrap = true;
+```
+
+### `ScrollOffset` (int, read-only)
+
+The current scroll offset (number of lines scrolled).
+
+```csharp
+int offset = textView.ScrollOffset;
+```
+
+### `LineCount` (int, read-only)
+
+The total number of lines.
+
+```csharp
+int count = textView.LineCount;
+```
+
+## Methods
+
+### `AppendLine(string text)`
+
+Adds a line of text to the view.
+
+```csharp
+textView.AppendLine("New message");
+```
+
+### `AppendLines(IEnumerable<string> lines)`
+
+Adds multiple lines of text.
+
+```csharp
+textView.AppendLines(new[] { "Line 1", "Line 2", "Line 3" });
+```
+
+### `SetText(string text)`
+
+Sets the text content, replacing all existing lines.
+
+```csharp
+textView.SetText("Line 1\nLine 2\nLine 3");
+```
+
+### `Clear()`
+
+Clears all text.
+
+```csharp
+textView.Clear();
+```
+
+### Scrolling Methods
+
+- `ScrollUp(int lines = 1)`: Scroll up
+- `ScrollDown(int lines = 1)`: Scroll down
+- `ScrollToTop()`: Scroll to top
+- `ScrollToBottom()`: Scroll to bottom
+
+## Keyboard Navigation
+
+- **Up Arrow**: Scroll up one line
+- **Down Arrow**: Scroll down one line
+- **Page Up**: Scroll up one page
+- **Page Down**: Scroll down one page
+- **Home**: Scroll to top
+- **End**: Scroll to bottom
+
+## Usage Example
+
+```csharp
+var textView = new TextView
+{
+    X = 2,
+    Y = 2,
+    Width = 70,
+    Height = 15,
+    ForegroundColor = Color.White,
+    BackgroundColor = Color.Black,
+    AutoScroll = true
+};
+
+textView.AppendLine("[System] Welcome!");
+textView.AppendLine("[User] Hello");
+textView.AppendLine("[Bot] Hi there!");
+
+// Disable auto-scroll to allow manual scrolling
+textView.AutoScroll = false;
+textView.ScrollToTop();
+```
+
+## Common Patterns
+
+### Chat Interface
+
+```csharp
+textView.AppendLine($"[{DateTime.Now:HH:mm:ss}] {username}: {message}");
+```
+
+### Log Viewer
+
+```csharp
+textView.AppendLine($"[{level}] {message}");
+```
+
+## Related Widgets
+
+- **[Label](/widgets/display/label)** - For single-line or simple text
+- **[TextField](/widgets/input/textfield)** - For text input
+- **[Base Widget](/widgets/base-widget)** - Base class documentation
+

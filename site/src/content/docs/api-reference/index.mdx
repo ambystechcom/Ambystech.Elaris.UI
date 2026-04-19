@@ -1,0 +1,178 @@
+---
+title: API Reference
+description: Overview of the Elaris.UI API structure
+---
+
+This page provides an overview of the Elaris.UI API structure, namespaces, and common patterns.
+
+## Namespace Organization
+
+Elaris.UI uses a clear namespace structure:
+
+- `Ambystech.Elaris.UI` - Core application and main types
+- `Ambystech.Elaris.UI.Widgets` - Base widget class
+- `Ambystech.Elaris.UI.Widgets.Layout` - Layout widgets
+- `Ambystech.Elaris.UI.Widgets.Display` - Display widgets
+- `Ambystech.Elaris.UI.Widgets.Input` - Input widgets
+- `Ambystech.Elaris.UI.Widgets.Data` - Data widgets
+- `Ambystech.Elaris.UI.Widgets.Menu` - Menu widgets
+- `Ambystech.Elaris.UI.Rendering` - Rendering system
+- `Ambystech.Elaris.UI.Input` - Input handling
+- `Ambystech.Elaris.UI.Core` - Core utilities
+- `Ambystech.Elaris.UI.Enums` - Enumerations
+
+## Core Classes
+
+### Application
+
+The main application class that manages the event loop and rendering.
+
+| Method | Description |
+|--------|-------------|
+| `Run(Widget rootWidget)` | Starts the application with the specified root widget |
+| `Stop()` | Stops the application |
+| `SetFocus(Widget widget)` | Sets the focused widget |
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `Screen` | `Screen?` | The current screen instance |
+| `TargetFps` | `int` | Target frames per second (default: 30) |
+| `InitialFocusWidget` | `Widget?` | Widget to receive initial focus |
+
+### Screen
+
+The terminal screen abstraction with double-buffered rendering.
+
+| Method | Description |
+|--------|-------------|
+| `Clear()` | Clears the back buffer |
+| `SetCell(int x, int y, Cell cell)` | Sets a cell in the back buffer |
+| `WriteText(int x, int y, string text, ...)` | Writes text to the back buffer |
+| `FillRectangle(Rectangle rect, ...)` | Fills a rectangle |
+| `DrawRectangle(Rectangle rect, ...)` | Draws a rectangle border |
+| `Render()` | Renders the back buffer to console |
+| `Resize(int width, int height)` | Resizes the screen buffer |
+
+### Widget
+
+The abstract base class for all UI widgets.
+
+| Method | Description |
+|--------|-------------|
+| `Add(Widget child)` | Adds a child widget |
+| `Remove(Widget child)` | Removes a child widget |
+| `Clear()` | Removes all children |
+| `Render(Screen screen)` | Renders the widget |
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `Bounds` | `Rectangle` | Widget bounds |
+| `X`, `Y`, `Width`, `Height` | `int` | Position and size |
+| `Visible` | `bool` | Visibility |
+| `Enabled` | `bool` | Enabled state |
+| `ForegroundColor` | `Color` | Text color |
+| `BackgroundColor` | `Color` | Background color |
+| `ZIndex` | `int` | Rendering order |
+| `Parent` | `Widget?` | Parent widget |
+| `Children` | `IReadOnlyList<Widget>` | Child widgets |
+| `IsFocusable` | `bool` | Can receive focus |
+| `HasFocus` | `bool` | Currently has focus |
+
+## Common Patterns
+
+### Creating and Running an Application
+
+```csharp
+var app = new Application();
+var rootWidget = new Frame("My App");
+app.Run(rootWidget);
+```
+
+### Adding Widgets
+
+```csharp
+var container = new Container();
+var label = new Label("Hello");
+container.Add(label);
+```
+
+### Handling Events
+
+```csharp
+button.Click += () =>
+{
+    Console.WriteLine("Clicked!");
+};
+```
+
+### Using Colors
+
+```csharp
+// Using ColorHelper
+var color = ColorHelper.FromRgb(100, 200, 255);
+var hexColor = ColorHelper.FromHex("#64C8FF");
+
+// Using System.Drawing.Color
+var white = Color.White;
+var transparent = Color.Transparent;
+```
+
+## Enumerations
+
+### LayoutMode
+
+- `Absolute` - Children maintain manual positions
+- `Vertical` - Children stacked vertically
+- `Horizontal` - Children arranged horizontally
+- `Fill` - Children fill container
+
+### BorderStyle
+
+- `None` - No border
+- `Single` - Single-line border
+- `Double` - Double-line border
+- `Rounded` - Rounded corners
+
+### ButtonStyle
+
+- `Standard` - Standard button
+- `Rounded` - Rounded corners
+- `Outline` - Outlined button
+- `Gradient` - Gradient background
+
+### HorizontalAlignment
+
+- `Left` - Left aligned
+- `Center` - Center aligned
+- `Right` - Right aligned
+
+### VerticalAlignment
+
+- `Top` - Top aligned
+- `Middle` - Middle aligned
+- `Bottom` - Bottom aligned
+
+## Helper Classes
+
+### ColorHelper
+
+Static utility class for color operations.
+
+| Method | Description |
+|--------|-------------|
+| `FromRgb(byte r, byte g, byte b)` | Creates color from RGB |
+| `FromRgba(byte r, byte g, byte b, byte a)` | Creates color from RGBA |
+| `FromHex(string hex)` | Creates color from hex string |
+| `TryFromHex(string hex, Color fallback)` | Tries to parse hex color |
+| `Lerp(Color start, Color end, float t)` | Linear interpolation |
+
+## XML Documentation
+
+Elaris.UI includes comprehensive XML documentation comments. When viewing the code in an IDE, you'll see detailed documentation for all public members.
+
+## Related Topics
+
+- **[Architecture](/architecture)** - System architecture
+- **[Base Widget](/widgets/base-widget)** - Widget base class
+- **[Widgets](/widgets/)** - All widget types
+

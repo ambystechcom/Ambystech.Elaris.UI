@@ -1,0 +1,81 @@
+---
+title: Table Demo Example
+description: Demonstrating table widget with data binding
+---
+
+The Table Demo shows how to use the `Table` widget to display structured data with columns, rows, selection, and specialized column types.
+
+## What It Demonstrates
+
+- Creating tables with columns
+- Data binding with lambda expressions
+- Specialized columns (ProgressColumn, CheckboxColumn)
+- Row selection and activation
+- Custom data models
+
+## Key Features
+
+### Creating Columns
+
+```csharp
+var table = new Table();
+
+table.AddColumn("Task", 30).BindTo<TaskItem>(t => t.Name);
+table.AddColumn("Status", 12).BindTo<TaskItem>(t => t.Status);
+table.AddColumn(new ProgressColumn("Progress", 20) 
+{ 
+    ShowPercentage = true 
+}.BindTo<TaskItem>(t => t.Progress));
+table.AddColumn(new CheckboxColumn("Done", 6)
+    .BindTo<TaskItem>(t => t.IsComplete));
+```
+
+### Data Binding
+
+```csharp
+var tasks = new List<TaskItem>
+{
+    new("Implement login page", "In Progress", 65, false, "High", "Alice"),
+    new("Design database schema", "Complete", 100, true, "High", "Bob")
+};
+
+table.DataSource = tasks;
+```
+
+### Events
+
+```csharp
+table.RowSelected += row =>
+{
+    if (row.Data is TaskItem task)
+        statusBar.LeftText = $"Selected: {task.Name}";
+};
+
+table.RowActivated += row =>
+{
+    if (row.Data is TaskItem task)
+        statusBar.CenterText = $"Activated: {task.Name}";
+};
+```
+
+## Running the Example
+
+```bash
+cd examples/Elaris.Examples.TableDemo
+dotnet run
+```
+
+## Learning Points
+
+- Tables are ideal for structured data
+- Lambda expressions provide flexible data binding
+- Specialized columns add visual elements
+- Row selection and activation enable interaction
+
+## Related Widgets
+
+- **[Table](/widgets/data/table)** - Table widget
+- **[TableColumn](/widgets/data/table-columns)** - Column configuration
+- **[ProgressColumn](/widgets/data/table-specialized)** - Progress column
+- **[CheckboxColumn](/widgets/data/table-specialized)** - Checkbox column
+

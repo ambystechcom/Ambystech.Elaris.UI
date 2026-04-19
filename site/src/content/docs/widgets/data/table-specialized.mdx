@@ -1,0 +1,84 @@
+---
+title: Specialized Table Columns
+description: CheckboxColumn, ProgressColumn, and custom column types
+---
+
+Elaris.UI provides specialized column types for common use cases: `CheckboxColumn` and `ProgressColumn`.
+
+## CheckboxColumn
+
+`CheckboxColumn` displays a checkbox in each cell, bound to a boolean property.
+
+### Usage
+
+```csharp
+var checkboxColumn = new CheckboxColumn("Done", 6)
+    .BindTo<TaskItem>(t => t.IsComplete);
+table.AddColumn(checkboxColumn);
+```
+
+The checkbox is automatically checked/unchecked based on the bound property value.
+
+## ProgressColumn
+
+`ProgressColumn` displays a progress bar in each cell, bound to a numeric value.
+
+### Properties
+
+- `ShowPercentage`: Whether to show percentage text
+- `FilledColor`: Color of filled portion
+- `UnfilledColor`: Color of unfilled portion
+
+### Usage
+
+```csharp
+var progressColumn = new ProgressColumn("Progress", 20)
+{
+    ShowPercentage = true,
+    FilledColor = Color.Green
+}.BindTo<TaskItem>(t => t.Progress);
+
+table.AddColumn(progressColumn);
+```
+
+## Custom Column Types
+
+You can create custom column types by inheriting from `TableColumn`:
+
+```csharp
+public class CustomColumn : TableColumn
+{
+    public CustomColumn(string name, int width) : base(name, width)
+    {
+    }
+
+    public override TableCell CreateCell(TableRow row, object? value)
+    {
+        return new CustomCell(this, row, value);
+    }
+}
+```
+
+Then create a custom cell type:
+
+```csharp
+public class CustomCell : TableCell
+{
+    public CustomCell(TableColumn column, TableRow row, object? value)
+        : base(column, row, value)
+    {
+    }
+
+    public override void Render(Screen screen, int x, int y, int width, 
+        bool isSelected, Color fg, Color bg)
+    {
+        // Custom rendering logic
+    }
+}
+```
+
+## Related Widgets
+
+- **[Table](/widgets/data/table)** - Main table widget
+- **[Table Columns](/widgets/data/table-columns)** - Base column types
+

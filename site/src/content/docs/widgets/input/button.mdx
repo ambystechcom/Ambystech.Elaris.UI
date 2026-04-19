@@ -1,0 +1,125 @@
+---
+title: Button
+description: A clickable button widget with multiple visual styles
+---
+
+The `Button` widget is a focusable, clickable button with support for multiple visual styles including standard, rounded, outline, and gradient.
+
+## Overview
+
+`Button` is one of the most commonly used input widgets. It supports keyboard activation (Enter/Space) and provides visual feedback for focus and press states.
+
+## Properties
+
+### `Text` (string)
+
+The button text.
+
+```csharp
+button.Text = "Click Me";
+```
+
+### `Style` (ButtonStyle)
+
+The visual style of the button:
+- `Standard`: Standard button with borders
+- `Rounded`: Button with rounded corners
+- `Outline`: Outlined button with transparent fill
+- `Gradient`: Button with gradient background
+
+```csharp
+button.Style = ButtonStyle.Rounded;
+```
+
+### Color Properties
+
+- `PressedBackgroundColor`: Background when pressed
+- `PressedForegroundColor`: Text color when pressed
+- `FocusedBackgroundColor`: Background when focused
+- `FocusedForegroundColor`: Text color when focused
+- `BorderColor`: Border color
+
+### Gradient Properties (for Gradient style)
+
+- `GradientStartColor`: Start color of gradient
+- `GradientEndColor`: End color of gradient
+- `PressedGradientStartColor`: Start color when pressed
+- `PressedGradientEndColor`: End color when pressed
+
+## Events
+
+### `Click`
+
+Raised when the button is clicked.
+
+```csharp
+button.Click += () =>
+{
+    Console.WriteLine("Button clicked!");
+};
+```
+
+### `Pressed`
+
+Raised when the button is pressed down.
+
+```csharp
+button.Pressed += () =>
+{
+    // Button is being pressed
+};
+```
+
+### `Released`
+
+Raised when the button is released.
+
+```csharp
+button.Released += () =>
+{
+    // Button was released
+};
+```
+
+## Methods
+
+### `PerformClick()`
+
+Programmatically triggers the button click.
+
+```csharp
+button.PerformClick();
+```
+
+## Usage Example
+
+```csharp
+var button = new Button("OK")
+{
+    X = 10,
+    Y = 5,
+    Width = 15,
+    Height = 3,
+    Style = ButtonStyle.Rounded,
+    BackgroundColor = ColorHelper.FromRgb(66, 135, 245),
+    ForegroundColor = Color.White,
+    PressedBackgroundColor = ColorHelper.FromRgb(40, 90, 180)
+};
+
+button.Click += () =>
+{
+    Console.WriteLine("OK clicked!");
+};
+```
+
+## Keyboard Interaction
+
+- **Enter** or **Space**: Activates the button
+- **Tab**: Navigate to next focusable widget
+
+## Related Widgets
+
+- **[TextField](/widgets/input/textfield)** - For text input
+- **[Checkbox](/widgets/input/checkbox)** - For boolean input
+- **[Base Widget](/widgets/base-widget)** - Base class documentation
+

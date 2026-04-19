@@ -1,0 +1,129 @@
+---
+title: MenuItem
+description: Represents a menu item with text, hotkey, and action
+---
+
+`MenuItem` represents a single item in a menu, with support for text, hotkeys, separators, checkable items, and submenus.
+
+## Properties
+
+### `Text` (string)
+
+The menu item text.
+
+```csharp
+item.Text = "Save";
+```
+
+### `Hotkey` (char?)
+
+The hotkey character (displayed with underline).
+
+```csharp
+item.Hotkey = 'S'; // Alt+S shortcut
+```
+
+### `IsSeparator` (bool)
+
+Whether this is a separator item.
+
+```csharp
+var separator = MenuItem.Separator();
+```
+
+### `Enabled` (bool)
+
+Whether the item is enabled (default: true).
+
+```csharp
+item.Enabled = false; // Disable item
+```
+
+### `Checked` (bool)
+
+Whether the item is checked (for toggle items).
+
+```csharp
+item.Checked = true; // Show as checked
+```
+
+### `SubItems` (List\<MenuItem>)
+
+Submenu items (creates a submenu).
+
+```csharp
+item.SubItems.Add(new MenuItem("Sub Item"));
+```
+
+### `HasSubmenu` (bool, read-only)
+
+Whether this item has a submenu.
+
+```csharp
+if (item.HasSubmenu)
+{
+    // Item has submenu
+}
+```
+
+## Events
+
+### `Selected`
+
+Raised when the menu item is selected.
+
+```csharp
+item.Selected += () =>
+{
+    Console.WriteLine("Item selected");
+};
+```
+
+## Methods
+
+### `Invoke()`
+
+Programmatically invokes the item's action.
+
+```csharp
+item.Invoke();
+```
+
+### `Separator()`
+
+Static method to create a separator item.
+
+```csharp
+var separator = MenuItem.Separator();
+```
+
+## Usage Example
+
+```csharp
+// Simple menu item
+var newItem = new MenuItem("New", () => CreateNew(), 'N');
+
+// Checkable menu item
+var showToolbar = new MenuItem("Show Toolbar", null, 'T')
+{
+    Checked = true
+};
+showToolbar.Selected += () =>
+{
+    showToolbar.Checked = !showToolbar.Checked;
+};
+
+// Menu with submenu
+var viewMenu = new MenuItem("View");
+viewMenu.SubItems.Add(showToolbar);
+viewMenu.SubItems.Add(MenuItem.Separator());
+viewMenu.SubItems.Add(new MenuItem("Zoom In", () => ZoomIn(), '+'));
+
+menuBar.AddItem(viewMenu);
+```
+
+## Related Widgets
+
+- **[MenuBar](/widgets/menu/menubar)** - Menu bar container
+- **[MenuDropdown](/widgets/menu/menudropdown)** - Dropdown display (internal)
+

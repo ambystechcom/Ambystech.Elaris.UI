@@ -1,0 +1,33 @@
+---
+title: Packages
+description: Optional packages that extend Elaris.UI
+---
+
+Elaris.UI ships a small core library and a set of **optional packages** that extend it with additional functionality. Packages live under the `packages/` directory of the repository and are published independently to NuGet.
+
+## Available Packages
+
+### Plugins
+
+Optional plugin packages add pluggable behavior to core widgets.
+
+- **[Ambystech.Elaris.UI.CodeEditor.Plugins](/packages/code-editor-plugins)** — File-based syntax highlighting plugins for the [`CodeEditor`](/widgets/input/code-editor) widget. Load additional languages and themes from JSON files at runtime.
+
+## Installing Packages
+
+All packages are standard NuGet packages. Add them to your project the same way you add the core library:
+
+```bash
+dotnet add package <package-id>
+```
+
+Each package is independently versioned and has its own documentation page describing what it adds, how to initialize it, and any configuration it expects.
+
+## Authoring Your Own Package
+
+Packages are regular .NET class libraries that reference `Ambystech.Elaris.UI`. They typically expose either:
+
+- A **plugin provider** that registers with a core extension point (e.g. `PluginManager` for the code editor).
+- A **new widget** that derives from `Widget` and follows the conventions in the core library.
+
+See the [Contributing Guide](/contributing/) for the conventions the repository follows.
