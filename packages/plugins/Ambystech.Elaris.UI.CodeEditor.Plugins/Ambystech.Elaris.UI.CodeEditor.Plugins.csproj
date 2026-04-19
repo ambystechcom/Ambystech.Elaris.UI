@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <LangVersion>13.0</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <PackageId>Ambystech.Elaris.UI.CodeEditor.Plugins</PackageId>
+    <Version>0.1.0-alpha</Version>
+    <Authors>Ambystech</Authors>
+    <Company>Ambystech</Company>
+    <Copyright>Copyright © $(Authors) $([System.DateTime]::Now.Year)</Copyright>
+    <Description>File-based syntax highlighting plugins for Elaris.UI CodeEditor</Description>
+    <PackageTags>tui;terminal;console;ui;code-editor;syntax-highlighting;plugins</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/ambystechcom/Ambystech.Elaris.UI</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ambystechcom/Ambystech.Elaris.UI</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <RootNamespace>Ambystech.Elaris.UI.CodeEditor.Plugins</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Ambystech.Elaris.UI.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="8.0.0" />
+  </ItemGroup>
+
+</Project>
+
