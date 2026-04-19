@@ -153,9 +153,15 @@ public class Application
                 return;
             }
 
-            if (key.Key == ConsoleKey.Tab)
+            if (key.Key == ConsoleKey.RightArrow && key.Modifiers.HasFlag(ConsoleModifiers.Alt))
             {
-                FocusNext(key.Modifiers.HasFlag(ConsoleModifiers.Shift));
+                FocusNext(false);
+                return;
+            }
+
+            if (key.Key == ConsoleKey.LeftArrow && key.Modifiers.HasFlag(ConsoleModifiers.Alt))
+            {
+                FocusNext(true);
                 return;
             }
 

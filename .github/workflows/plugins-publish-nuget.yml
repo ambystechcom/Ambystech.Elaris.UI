@@ -1,11 +1,13 @@
-name: Publish to NuGet
+name: Publish Plugins to NuGet
 
 on:
   push:
     branches:
       - main
+    paths:
+      - 'packages/plugins/**'
     paths-ignore:
-      - 'packages/**'
+      - 'src/**'
       - 'tests/**'
   workflow_dispatch:
 
@@ -54,24 +56,21 @@ jobs:
 
     - name: Update csproj version
       run: |
-        sed -i 's/<Version>.*<\/Version>/<Version>${{ steps.gitversion.outputs.nuGetVersionV2 }}<\/Version>/' src/Ambystech.Elaris.UI.csproj
+        sed -i 's/<Version>.*<\/Version>/<Version>${{ steps.gitversion.outputs.nuGetVersionV2 }}<\/Version>/' packages/plugins/Ambystech.Elaris.UI.CodeEditor.Plugins/Ambystech.Elaris.UI.CodeEditor.Plugins.csproj
 
     - name: Restore dependencies
-      run: dotnet restore src/Ambystech.Elaris.UI.csproj
+      run: dotnet restore packages/plugins/Ambystech.Elaris.UI.CodeEditor.Plugins/Ambystech.Elaris.UI.CodeEditor.Plugins.csproj
 
     - name: Build
-      run: dotnet build src/Ambystech.Elaris.UI.csproj --configuration Release --no-restore
-
-    - name: Test
-      run: dotnet test tests/Ambystech.Elaris.UI.Tests.csproj --configuration Release --verbosity normal
+      run: dotnet build packages/plugins/Ambystech.Elaris.UI.CodeEditor.Plugins/Ambystech.Elaris.UI.CodeEditor.Plugins.csproj --configuration Release --no-restore
 
     - name: Pack
-      run: dotnet pack src/Ambystech.Elaris.UI.csproj --configuration Release --no-build --output ./artifacts
+      run: dotnet pack packages/plugins/Ambystech.Elaris.UI.CodeEditor.Plugins/Ambystech.Elaris.UI.CodeEditor.Plugins.csproj --configuration Release --no-build --output ./artifacts
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: nuget-package
+        name: nuget-package-plugins
         path: ./artifacts/*.nupkg
 
   publish:
@@ -88,15 +87,15 @@ jobs:
     - name: Download artifact
       uses: actions/download-artifact@v4
       with:
-        name: nuget-package
+        name: nuget-package-plugins
         path: ./artifacts
 
     - name: Create Git Tag
       run: |
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
-        git tag -a "v${{ needs.build-and-test.outputs.version }}" -m "Release v${{ needs.build-and-test.outputs.version }}"
-        git push origin "v${{ needs.build-and-test.outputs.version }}"
+        git tag -a "plugins-v${{ needs.build-and-test.outputs.version }}" -m "Release plugins v${{ needs.build-and-test.outputs.version }}"
+        git push origin "plugins-v${{ needs.build-and-test.outputs.version }}"
 
     - name: Publish to NuGet
       run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
@@ -120,8 +119,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: v${{ needs.build-and-test.outputs.version }}
-        release_name: Release v${{ needs.build-and-test.outputs.version }}
+        tag_name: plugins-v${{ needs.build-and-test.outputs.version }}
+        release_name: Release Plugins v${{ needs.build-and-test.outputs.version }}
         body: |
           ## Changes in this Release
 
@@ -131,7 +130,7 @@ jobs:
 
           This release is available on NuGet.org:
           ```
-          dotnet add package Ambystech.Elaris.UI --version ${{ needs.build-and-test.outputs.nuget_version }}
+          dotnet add package Ambystech.Elaris.UI.CodeEditor.Plugins --version ${{ needs.build-and-test.outputs.nuget_version }}
           ```
         draft: false
         prerelease: ${{ needs.build-and-test.outputs.is_prerelease }}
@@ -142,6 +141,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./artifacts/Ambystech.Elaris.UI.${{ needs.build-and-test.outputs.nuget_version }}.nupkg
-        asset_name: Ambystech.Elaris.UI.${{ needs.build-and-test.outputs.nuget_version }}.nupkg
+        asset_path: ./artifacts/Ambystech.Elaris.UI.CodeEditor.Plugins.${{ needs.build-and-test.outputs.nuget_version }}.nupkg
+        asset_name: Ambystech.Elaris.UI.CodeEditor.Plugins.${{ needs.build-and-test.outputs.nuget_version }}.nupkg
         asset_content_type: application/zip
+

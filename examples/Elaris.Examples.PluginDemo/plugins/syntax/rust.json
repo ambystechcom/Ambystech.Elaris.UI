@@ -1,0 +1,18 @@
+{
+  "language": "rust",
+  "keywords": [
+    "fn", "let", "mut", "pub", "struct", "enum", "impl", "trait", "use", "mod",
+    "if", "else", "match", "for", "while", "loop", "return", "break", "continue",
+    "const", "static", "unsafe", "async", "await", "move", "dyn", "ref", "self",
+    "Self", "true", "false", "None", "Some", "Ok", "Err", "Box", "Vec", "String"
+  ],
+  "stringDelimiters": ["\"", "r#\"", "r##\""],
+  "commentPatterns": ["//.*", "/\\*.*?\\*/"],
+  "numberPattern": "\\b\\d+(_?\\d+)*(\\.\\d+)?(_?\\d+)*\\b",
+  "bracketPairs": {
+    "(": ")",
+    "[": "]",
+    "{": "}"
+  }
+}
+
