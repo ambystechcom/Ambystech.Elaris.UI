@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using Ambystech.Elaris.UI;
 using Ambystech.Elaris.UI.Core;
 using Ambystech.Elaris.UI.Enums;
@@ -30,8 +30,6 @@ var statusBar = new StatusBar
 
 var menuBar = new MenuBar
 {
-    X = 0,
-    Y = 0,
     Height = 1,
     ForegroundColor = Color.Black,
     BackgroundColor = ColorHelper.FromRgb(200, 200, 200)
@@ -101,37 +99,53 @@ namespace Example
 
 codeEditor2.Text = @"fn main() {
     let message = ""Hello, World!"";
-    println!({}, message);
-    
+    println!(""{}"", message);
+
     let numbers = vec![1, 2, 3, 4, 5];
     for num in numbers {
-        println!({}, num);
+        println!(""{}"", num);
     }
 }";
 
 var root = new ResponsiveContainer
 {
-    X = 0,
-    Y = 1,
-    Width = app.Screen.Width,
-    Height = app.Screen.Height - 2,
-    LayoutMode = LayoutMode.Horizontal
+    BackgroundColor = Color.Black
 };
+
+root.Add(menuBar);
+root.Add(leftFrame);
+root.Add(rightFrame);
+root.Add(statusBar);
+leftFrame.Add(codeEditor1);
+rightFrame.Add(codeEditor2);
 
 root.OnResize((width, height) =>
 {
-    int framePadding = 2;
-    int lineNumberWidth = codeEditor1.ShowLineNumbers ? 5 : 0;
+    menuBar.X = 0;
+    menuBar.Y = 0;
+    menuBar.Width = width;
+    menuBar.Height = 1;
+
+    int contentY = 1;
+    int contentHeight = height - 2;
+    int splitX = width / 2;
 
     leftFrame.X = 0;
-    leftFrame.Y = 0;
-    leftFrame.Width = width / 2;
-    leftFrame.Height = height;
+    leftFrame.Y = contentY;
+    leftFrame.Width = splitX;
+    leftFrame.Height = contentHeight;
 
-    rightFrame.X = width / 2;
-    rightFrame.Y = 0;
-    rightFrame.Width = width - (width / 2);
-    rightFrame.Height = height;
+    rightFrame.X = splitX;
+    rightFrame.Y = contentY;
+    rightFrame.Width = width - splitX;
+    rightFrame.Height = contentHeight;
+
+    statusBar.X = 0;
+    statusBar.Y = height - 1;
+    statusBar.Width = width;
+    statusBar.Height = 1;
+
+    int framePadding = 2;
 
     codeEditor1.X = leftFrame.X + framePadding;
     codeEditor1.Y = leftFrame.Y + framePadding;
@@ -144,28 +158,19 @@ root.OnResize((width, height) =>
     codeEditor2.Height = rightFrame.Height - (framePadding * 2);
 });
 
-root.Add(leftFrame);
-root.Add(rightFrame);
-leftFrame.Add(codeEditor1);
-rightFrame.Add(codeEditor2);
-
-var mainContainer = new Container
-{
-    X = 0,
-    Y = 0,
-    Width = app.Screen?.Width ?? 80,
-    Height = app.Screen?.Height ?? 24
-};
-
-mainContainer.Add(menuBar);
-mainContainer.Add(root);
-mainContainer.Add(statusBar);
-
 app.InitialFocusWidget = codeEditor1;
 
-Console.WriteLine("Plugin Demo - Demonstrating file-based syntax highlighting plugins");
-Console.WriteLine("Use Alt+Right/Left Arrow to switch between editors");
-Console.WriteLine("Press ESC to exit");
-Console.WriteLine();
+try
+{
+    Console.WriteLine("Plugin Demo - Demonstrating file-based syntax highlighting plugins");
+    Console.WriteLine("Use Alt+Right/Left Arrow to switch between editors");
+    Console.WriteLine("Press ESC to exit");
+    Thread.Sleep(1500);
 
-app.Run(mainContainer);
+    app.Run(root);
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"\nError: {ex.Message}");
+    Console.WriteLine(ex.StackTrace);
+}
