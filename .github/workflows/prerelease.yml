@@ -8,6 +8,7 @@ on:
     paths-ignore:
       - 'packages/**'
       - 'tests/**'
+      - 'site/**'
   workflow_dispatch:
 
 permissions:
