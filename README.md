@@ -14,7 +14,7 @@ A lightweight Terminal UI library for .NET with true 24-bit RGB color support. B
 - **Cross-Platform**: Works on Windows, macOS, and Linux
 - **Modern Architecture**: Clean, extensible widget-based design
 - **High Performance**: Double-buffered rendering with minimal overhead
-- **Multi-Target**: Supports .NET 8.0 and .NET 9.0
+- **Multi-Target**: Supports .NET 8.0, .NET 9.0, and .NET 10.0
 
 ## Quick Start
 

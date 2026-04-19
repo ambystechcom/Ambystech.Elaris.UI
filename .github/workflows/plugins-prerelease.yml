@@ -1,12 +1,14 @@
-name: Publish Prerelease to NuGet
+name: Publish Plugins Prerelease to NuGet
 
 on:
   push:
     branches:
       - develop
       - 'feature/**'
+    paths:
+      - 'packages/plugins/**'
     paths-ignore:
-      - 'packages/**'
+      - 'src/**'
       - 'tests/**'
   workflow_dispatch:
 
@@ -54,24 +56,21 @@ jobs:
 
     - name: Update csproj version
       run: |
-        sed -i 's/<Version>.*<\/Version>/<Version>${{ steps.gitversion.outputs.nuGetVersionV2 }}<\/Version>/' src/Ambystech.Elaris.UI.csproj
+        sed -i 's/<Version>.*<\/Version>/<Version>${{ steps.gitversion.outputs.nuGetVersionV2 }}<\/Version>/' packages/plugins/Ambystech.Elaris.UI.CodeEditor.Plugins/Ambystech.Elaris.UI.CodeEditor.Plugins.csproj
 
     - name: Restore dependencies
-      run: dotnet restore src/Ambystech.Elaris.UI.csproj
+      run: dotnet restore packages/plugins/Ambystech.Elaris.UI.CodeEditor.Plugins/Ambystech.Elaris.UI.CodeEditor.Plugins.csproj
 
     - name: Build
-      run: dotnet build src/Ambystech.Elaris.UI.csproj --configuration Release --no-restore
-
-    - name: Test
-      run: dotnet test tests/Ambystech.Elaris.UI.Tests.csproj --configuration Release --verbosity normal
+      run: dotnet build packages/plugins/Ambystech.Elaris.UI.CodeEditor.Plugins/Ambystech.Elaris.UI.CodeEditor.Plugins.csproj --configuration Release --no-restore
 
     - name: Pack
-      run: dotnet pack src/Ambystech.Elaris.UI.csproj --configuration Release --no-build --output ./artifacts
+      run: dotnet pack packages/plugins/Ambystech.Elaris.UI.CodeEditor.Plugins/Ambystech.Elaris.UI.CodeEditor.Plugins.csproj --configuration Release --no-build --output ./artifacts
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: nuget-package-prerelease
+        name: nuget-package-plugins-prerelease
         path: ./artifacts/*.nupkg
 
   publish-prerelease:
@@ -83,7 +82,7 @@ jobs:
     - name: Download artifact
       uses: actions/download-artifact@v4
       with:
-        name: nuget-package-prerelease
+        name: nuget-package-plugins-prerelease
         path: ./artifacts
 
     - name: Publish to NuGet
@@ -95,4 +94,5 @@ jobs:
         echo "Version: ${{ needs.build-and-test.outputs.nuget_version }}"
         echo ""
         echo "To install this prerelease:"
-        echo "dotnet add package Ambystech.Elaris.UI --version ${{ needs.build-and-test.outputs.nuget_version }}"
+        echo "dotnet add package Ambystech.Elaris.UI.CodeEditor.Plugins --version ${{ needs.build-and-test.outputs.nuget_version }}"
+
