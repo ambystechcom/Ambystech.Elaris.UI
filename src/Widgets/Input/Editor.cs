@@ -42,8 +42,8 @@ public class Editor : Widget
             {
                 _lines.Add(string.Empty);
             }
-            _cursorLine = 0;
-            _cursorColumn = 0;
+            _cursorLine = _lines.Count - 1;
+            _cursorColumn = _lines[_cursorLine].Length;
             _scrollOffsetY = 0;
             _scrollOffsetX = 0;
             EnsureCursorVisible();
