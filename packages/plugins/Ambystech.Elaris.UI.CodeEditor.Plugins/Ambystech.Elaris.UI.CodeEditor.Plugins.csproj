@@ -1,18 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <!-- Multi-target for compatibility -->
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
     <LangVersion>13.0</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
+    <!-- NuGet Package Metadata -->
     <PackageId>Ambystech.Elaris.UI.CodeEditor.Plugins</PackageId>
     <Version>0.1.0-alpha</Version>
     <Authors>Ambystech</Authors>
     <Company>Ambystech</Company>
     <Copyright>Copyright © $(Authors) $([System.DateTime]::Now.Year)</Copyright>
     <Description>File-based syntax highlighting plugins for Elaris.UI CodeEditor</Description>
-    <PackageTags>tui;terminal;console;ui;code-editor;syntax-highlighting;plugins</PackageTags>
+    <PackageTags>tui;terminal;console;ui;ansi;color;rgb;truecolor;cli;code-editor;syntax-highlighting;plugins</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/ambystechcom/Ambystech.Elaris.UI</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ambystechcom/Ambystech.Elaris.UI</RepositoryUrl>
@@ -21,12 +23,18 @@
     <RootNamespace>Ambystech.Elaris.UI.CodeEditor.Plugins</RootNamespace>
   </PropertyGroup>
 
+  <!-- This project depends on the main Elaris.UI library, perhaps in the future it could be replaced with latest Elaris Nuget -->
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\Ambystech.Elaris.UI.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Text.Json" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" Condition="Exists('README.md')" />
+    <None Include="../../../icon.png" Pack="true" PackagePath="\" Condition="Exists('../../../icon.png')" />
   </ItemGroup>
 
 </Project>
