@@ -1,0 +1,119 @@
+---
+title: Chat Demo Example
+description: A chat-like interface with scrolling text and input
+---
+
+The Chat Demo shows how to create a chat-like interface with a scrollable message area and text input field.
+
+## What It Demonstrates
+
+- `StatusBar` for application status
+- `TextView` for scrollable message display
+- `TextField` for user input
+- Custom layout with `OnBoundsChanged`
+- Event handling for text input
+- Custom container classes
+
+## Code Structure
+
+The example creates:
+- A `RootContainer` that manages the overall layout
+- A `ChatFrame` that contains the chat view and input field
+- A `StatusBar` at the bottom
+
+## Key Features
+
+### StatusBar
+
+```csharp
+var statusBar = new StatusBar
+{
+    LeftText = "Elaris Chat v0.1.0",
+    CenterText = "Chat Demo",
+    RightText = "ESC to exit",
+    Height = 1
+};
+```
+
+### TextView for Messages
+
+```csharp
+var chatView = new TextView
+{
+    AutoScroll = true,
+    ForegroundColor = Color.White,
+    BackgroundColor = Color.Black
+};
+
+chatView.AppendLine("[System] Welcome to Elaris Chat Demo!");
+chatView.AppendLine("[User] Hello, Elaris!");
+```
+
+### TextField for Input
+
+```csharp
+var inputField = new TextField("Type a message...")
+{
+    ForegroundColor = Color.White,
+    BackgroundColor = ColorHelper.FromRgb(30, 30, 30),
+    PlaceholderColor = Color.Gray,
+    Height = 1
+};
+
+inputField.KeyPress += (key) =>
+{
+    if (key.Key == ConsoleKey.Enter)
+    {
+        chatView.AppendLine($"[User] {inputField.Text}");
+        inputField.Text = string.Empty;
+        return true;
+    }
+    return false;
+};
+```
+
+## Custom Layout
+
+The example shows how to create custom containers that handle layout:
+
+```csharp
+class ChatFrame : Frame
+{
+    protected override void OnBoundsChanged()
+    {
+        base.OnBoundsChanged();
+        
+        // Layout chat view and input field
+        _chatView.X = contentX;
+        _chatView.Y = contentY;
+        _chatView.Width = contentWidth;
+        _chatView.Height = contentHeight - 1;
+        
+        _inputField.X = contentX;
+        _inputField.Y = contentY + contentHeight - 1;
+        _inputField.Width = contentWidth;
+    }
+}
+```
+
+## Running the Example
+
+```bash
+cd examples/Elaris.Examples.ChatDemo
+dotnet run
+```
+
+## Learning Points
+
+- `TextView` automatically scrolls when `AutoScroll` is enabled
+- Custom containers can override `OnBoundsChanged` for layout
+- Event handlers can intercept and modify default behavior
+- `StatusBar` provides a convenient way to show status information
+
+## Related Widgets
+
+- **[TextView](/widgets/display/textview)** - Scrollable text display
+- **[TextField](/widgets/input/textfield)** - Text input
+- **[StatusBar](/widgets/layout/statusbar)** - Status bar widget
+- **[Container](/widgets/layout/container)** - Base container class
+

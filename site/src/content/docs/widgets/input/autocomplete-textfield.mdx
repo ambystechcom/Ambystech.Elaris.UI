@@ -1,0 +1,157 @@
+---
+title: AutoCompleteTextField
+description: A text field with autocomplete suggestions displayed in a popup
+---
+
+The `AutoCompleteTextField` extends `TextField` and adds autocomplete functionality with a popup list of suggestions.
+
+## Overview
+
+`AutoCompleteTextField` provides intelligent text input with suggestions. It uses a debounced async provider to fetch suggestions as the user types.
+
+## Properties
+
+### `SuggestionsProvider` (`Func<string, Task<List<string>>>?`)
+
+An async function that provides suggestions based on the current text.
+
+```csharp
+autoCompleteField.SuggestionsProvider = async (text) =>
+{
+    // Fetch suggestions asynchronously
+    return await GetSuggestionsAsync(text);
+};
+```
+
+### `MaxSuggestions` (int)
+
+Maximum number of suggestions to display (default: 10).
+
+```csharp
+autoCompleteField.MaxSuggestions = 5;
+```
+
+### `DebounceDelay` (int)
+
+Delay in milliseconds before querying suggestions (default: 200).
+
+```csharp
+autoCompleteField.DebounceDelay = 300;
+```
+
+### `ShowPopupAbove` (bool)
+
+Whether to show the popup above the text field (auto-calculated).
+
+### Color Properties
+
+- `SuggestionBackgroundColor`: Background color for suggestions
+- `SuggestionForegroundColor`: Text color for suggestions
+- `SelectionHighlightColor`: Color for selected suggestion
+
+## Methods
+
+### `ShowSuggestions(List<string> suggestions)`
+
+Manually shows suggestions.
+
+```csharp
+autoCompleteField.ShowSuggestions(new List<string> { "Option 1", "Option 2" });
+```
+
+### `HideSuggestions()`
+
+Hides the suggestions popup.
+
+```csharp
+autoCompleteField.HideSuggestions();
+```
+
+### `RefreshSuggestions()`
+
+Manually refreshes suggestions based on current text.
+
+```csharp
+autoCompleteField.RefreshSuggestions();
+```
+
+## Events
+
+### `SuggestionSelected`
+
+Raised when a suggestion is selected.
+
+```csharp
+autoCompleteField.SuggestionSelected += (suggestion) =>
+{
+    Console.WriteLine($"Selected: {suggestion}");
+};
+```
+
+### `PopupOpened`
+
+Raised when the popup opens.
+
+```csharp
+autoCompleteField.PopupOpened += () =>
+{
+    // Popup is visible
+};
+```
+
+### `PopupClosed`
+
+Raised when the popup closes.
+
+```csharp
+autoCompleteField.PopupClosed += () =>
+{
+    // Popup is hidden
+};
+```
+
+## Keyboard Navigation
+
+When popup is visible:
+- **Up/Down Arrow**: Navigate suggestions
+- **Enter** or **Tab**: Accept selected suggestion
+- **Escape**: Close popup
+
+## Usage Example
+
+```csharp
+var autoComplete = new AutoCompleteTextField("Search...")
+{
+    X = 10,
+    Y = 5,
+    Width = 40,
+    Height = 1
+};
+
+autoComplete.SuggestionsProvider = async (text) =>
+{
+    if (string.IsNullOrWhiteSpace(text))
+        return new List<string>();
+    
+    // Simulate async search
+    await Task.Delay(100);
+    return new List<string>
+    {
+        $"{text} result 1",
+        $"{text} result 2",
+        $"{text} result 3"
+    };
+};
+
+autoComplete.SuggestionSelected += (suggestion) =>
+{
+    Console.WriteLine($"Selected: {suggestion}");
+};
+```
+
+## Related Widgets
+
+- **[TextField](/widgets/input/textfield)** - Base text field class
+- **[ListBox](/widgets/input/listbox)** - Used internally for suggestions
+- **[Base Widget](/widgets/base-widget)** - Base class documentation
+

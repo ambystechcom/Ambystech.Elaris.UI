@@ -1,0 +1,100 @@
+---
+title: Panel
+description: A collapsible panel widget with a header
+---
+
+The `Panel` widget is a collapsible frame that can expand and collapse to show or hide its contents.
+
+## Overview
+
+`Panel` extends `Frame` and adds collapsible functionality. When collapsed, only the header is visible. When expanded, the full panel with all children is shown.
+
+## Properties
+
+### `Collapsed` (bool)
+
+Whether the panel is currently collapsed.
+
+```csharp
+panel.Collapsed = true; // Collapse the panel
+```
+
+### `Header` (string)
+
+The panel header text. The header displays a collapse/expand indicator (▼/▶).
+
+```csharp
+panel.Header = "Advanced Settings";
+```
+
+## Methods
+
+### `Toggle()`
+
+Toggles the collapsed state.
+
+```csharp
+panel.Toggle();
+```
+
+### `Expand()`
+
+Expands the panel.
+
+```csharp
+panel.Expand();
+```
+
+### `Collapse()`
+
+Collapses the panel.
+
+```csharp
+panel.Collapse();
+```
+
+## Usage Example
+
+```csharp
+var panel = new Panel("Advanced Options")
+{
+    X = 5,
+    Y = 5,
+    Width = 50,
+    Height = 15,
+    BorderStyle = BorderStyle.Single,
+    ForegroundColor = Color.White
+};
+
+var option1 = new Checkbox("Enable feature A");
+var option2 = new Checkbox("Enable feature B");
+
+panel.Add(option1);
+panel.Add(option2);
+
+// Panel starts expanded by default
+// User can press Space or Enter to toggle
+```
+
+## Keyboard Interaction
+
+- **Space** or **Enter**: Toggle collapsed state
+- **Mouse Click** on header: Toggle collapsed state
+
+## Behavior
+
+- When collapsed:
+  - Height is set to 3 (minimum for header)
+  - All children are hidden (`Visible = false`)
+  - Header shows ▶ indicator
+
+- When expanded:
+  - Height is restored to previous value
+  - All children are shown (`Visible = true`)
+  - Header shows ▼ indicator
+
+## Related Widgets
+
+- **[Frame](/widgets/layout/frame)** - Base frame class
+- **[Container](/widgets/layout/container)** - Base container class
+

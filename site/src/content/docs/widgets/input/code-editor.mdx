@@ -1,0 +1,159 @@
+---
+title: CodeEditor
+description: A code editor widget with syntax highlighting, bracket matching, and auto-indentation
+---
+
+The `CodeEditor` widget extends [`Editor`](/widgets/input/editor) with syntax highlighting, bracket matching, configurable indentation, and auto-close of bracket pairs.
+
+## Overview
+
+`CodeEditor` is built on top of `Editor`, so it inherits multi-line editing, line numbers, selection, and undo/redo. It adds a pluggable syntax highlighting system backed by `PluginManager`, which ships with built-in rules for **csharp**, **javascript**, and **python**, and a **default** theme. Additional languages and themes can be supplied through plugin packages (see `Ambystech.Elaris.UI.CodeEditor.Plugins`).
+
+## Properties
+
+### `Language` (string)
+
+The programming language used for syntax highlighting. Falls back to `"csharp"` if the requested language isn't registered.
+
+```csharp
+codeEditor.Language = "csharp";
+```
+
+### `Theme` (string)
+
+The theme name used for token colors. Falls back to `"default"` if the requested theme isn't registered.
+
+```csharp
+codeEditor.Theme = "default";
+```
+
+### `SyntaxHighlighting` (bool)
+
+Whether syntax highlighting is enabled. When `false`, `CodeEditor` renders like a plain `Editor`.
+
+```csharp
+codeEditor.SyntaxHighlighting = true;
+```
+
+### `ShowBracketMatching` (bool)
+
+Whether to highlight the bracket that matches the one at the cursor.
+
+```csharp
+codeEditor.ShowBracketMatching = true;
+```
+
+### `TabSize` (int)
+
+The number of spaces per tab. Minimum is 1.
+
+```csharp
+codeEditor.TabSize = 4;
+```
+
+### `UseTabs` (bool)
+
+If `true`, the Tab key inserts a literal `\t`; otherwise it inserts `TabSize` spaces.
+
+```csharp
+codeEditor.UseTabs = false;
+```
+
+### `AutoIndent` (bool)
+
+When enabled, pressing Enter preserves the current line's indentation (and adds one extra level after an opening bracket), and typing an opening bracket (`(`, `[`, `{`) automatically inserts the matching closing bracket.
+
+```csharp
+codeEditor.AutoIndent = true;
+```
+
+## Methods
+
+### `SetLanguage(string language)`
+
+Sets the highlighting language. Equivalent to assigning to `Language`.
+
+```csharp
+codeEditor.SetLanguage("javascript");
+```
+
+### `FindMatchingBracket(int line, int column)`
+
+Returns the `Point` of the bracket that matches the one at the given position, or `null` if none is found or the character is not a bracket.
+
+```csharp
+var match = codeEditor.FindMatchingBracket(codeEditor.CursorLine, codeEditor.CursorColumn);
+```
+
+### `GetIndentationLevel(int line)`
+
+Returns the leading-whitespace width of a line, measured in spaces (tabs count as `TabSize`).
+
+```csharp
+int indent = codeEditor.GetIndentationLevel(codeEditor.CursorLine);
+```
+
+## Keyboard Behavior
+
+In addition to all [Editor](/widgets/input/editor) shortcuts:
+
+- **Tab**: Inserts indentation (`TabSize` spaces or `\t` depending on `UseTabs`). With `AutoIndent` enabled, uses the line's current indent level.
+- **Shift+Tab**: Removes one indentation step before the cursor.
+- **Enter**: With `AutoIndent` enabled, preserves the current indent and adds an extra level after an opening `{`, `[`, or `(`.
+- **`{`, `[`, `(`**: With `AutoIndent` enabled, inserts the matching closing bracket and places the cursor between the pair.
+
+## Built-in Languages and Themes
+
+| Language     | Keywords include                         |
+| ------------ | ---------------------------------------- |
+| `csharp`     | `class`, `public`, `async`, `await`, ... |
+| `javascript` | `function`, `const`, `async`, ...        |
+| `python`     | `def`, `class`, `import`, ...            |
+
+The `default` theme maps token types (keyword, string, number, comment, identifier, operator) to colors. Additional themes and languages can be registered through the `PluginManager` plugin API.
+
+## Usage Example
+
+```csharp
+var codeEditor = new CodeEditor
+{
+    X = 2,
+    Y = 2,
+    Width = 80,
+    Height = 24,
+    ShowLineNumbers = true,
+    SyntaxHighlighting = true,
+    ShowBracketMatching = true,
+    AutoIndent = true,
+    TabSize = 4,
+    Language = "csharp",
+    Theme = "default",
+    ForegroundColor = Color.White,
+    BackgroundColor = Color.Black,
+    LineNumberColor = ColorHelper.FromRgb(100, 100, 100),
+    Text = @"using System;
+
+namespace Elaris.Examples
+{
+    public class Program
+    {
+        public static void Main(string[] args)
+        {
+            Console.WriteLine(""Hello, Elaris!"");
+        }
+    }
+}"
+};
+
+codeEditor.CursorMoved += (line, col) =>
+{
+    statusBar.CenterText = $"Line {line + 1}, Col {col + 1} | {codeEditor.Language}";
+};
+```
+
+## Related Widgets
+
+- **[Editor](/widgets/input/editor)** — Plain multi-line text editor base class
+- **[TextField](/widgets/input/textfield)** — Single-line text input
+- **[TextView](/widgets/display/textview)** — Read-only multi-line text display
+- **[Base Widget](/widgets/base-widget)** — Base class documentation

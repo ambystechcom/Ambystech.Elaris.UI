@@ -1,0 +1,204 @@
+---
+title: Editor
+description: A multi-line text editor widget with cursor navigation, line numbers, selection, and undo/redo
+---
+
+The `Editor` widget provides a multi-line text editor with cursor navigation, line numbers, text selection, and full undo/redo support.
+
+## Overview
+
+`Editor` is the base editing widget for multi-line text in Elaris.UI. It handles the core editing primitives (insert, delete, select, move) and the rendering of text with optional line numbers. For syntax-highlighted code editing, use [`CodeEditor`](/widgets/input/code-editor), which derives from `Editor`.
+
+## Properties
+
+### `Text` (string)
+
+The full text content. Setting this replaces all lines and moves the cursor to the end.
+
+```csharp
+editor.Text = "Line 1\nLine 2\nLine 3";
+```
+
+### `Lines` (IReadOnlyList&lt;string&gt;)
+
+The individual lines of text, read-only.
+
+```csharp
+int lineCount = editor.Lines.Count;
+```
+
+### `CursorLine` (int)
+
+The current cursor line (0-based).
+
+```csharp
+editor.CursorLine = 0;
+```
+
+### `CursorColumn` (int)
+
+The current cursor column (0-based).
+
+```csharp
+editor.CursorColumn = 0;
+```
+
+### `ShowLineNumbers` (bool)
+
+Whether to display line numbers in the gutter.
+
+```csharp
+editor.ShowLineNumbers = true;
+```
+
+### `WordWrap` (bool)
+
+Whether to enable word wrapping.
+
+```csharp
+editor.WordWrap = false;
+```
+
+### `LineNumberColor` (Color)
+
+The color used for the line-number gutter.
+
+```csharp
+editor.LineNumberColor = ColorHelper.FromRgb(100, 100, 100);
+```
+
+### `SelectionStart` (Point?)
+
+The start position of the current text selection, or `null` if no selection is active.
+
+### `SelectionEnd` (Point?)
+
+The end position of the current text selection, or `null` if no selection is active.
+
+## Methods
+
+### `InsertText(string text)`
+
+Inserts text at the current cursor position. Multi-line strings (containing `\n`) are handled.
+
+```csharp
+editor.InsertText("Hello");
+```
+
+### `DeleteChar()`
+
+Deletes the character at the cursor, or the selection if one is active.
+
+### `DeleteBackspace()`
+
+Deletes the character before the cursor, or the selection if one is active.
+
+### `DeleteSelection()`
+
+Deletes the current selection.
+
+### `MoveCursor(int line, int column)`
+
+Moves the cursor to the specified position.
+
+```csharp
+editor.MoveCursor(0, 0);
+```
+
+### `SelectAll()`
+
+Selects the entire text content.
+
+### `GetLine(int lineIndex)`
+
+Returns the text of a specific line.
+
+### `SetLine(int lineIndex, string text)`
+
+Replaces the text of a specific line.
+
+### `Undo()`
+
+Undoes the last edit. Up to 50 operations are retained.
+
+### `Redo()`
+
+Redoes the last undone edit.
+
+## Events
+
+### `TextChanged`
+
+Raised whenever the text content changes.
+
+```csharp
+editor.TextChanged += (newText) =>
+{
+    Console.WriteLine($"Text now has {newText.Length} characters.");
+};
+```
+
+### `CursorMoved`
+
+Raised when the cursor position changes. The handler receives the new line and column.
+
+```csharp
+editor.CursorMoved += (line, column) =>
+{
+    statusBar.RightText = $"Line {line + 1}, Col {column + 1}";
+};
+```
+
+### `LineChanged`
+
+Raised when a specific line is modified. The handler receives the line index.
+
+```csharp
+editor.LineChanged += (lineIndex) =>
+{
+    // Line lineIndex was edited
+};
+```
+
+## Keyboard Navigation
+
+- **Left/Right Arrow**: Move cursor by one character (wraps between lines)
+- **Up/Down Arrow**: Move cursor between lines
+- **Home/End**: Move to start or end of the current line
+- **Ctrl+Home/Ctrl+End**: Move to start or end of the document
+- **Page Up/Page Down**: Scroll one page
+- **Enter**: Insert newline
+- **Backspace/Delete**: Delete character before/after cursor
+- **Tab**: Insert four spaces
+- **Ctrl+Z**: Undo
+- **Ctrl+Y**: Redo
+- **Ctrl+A**: Select all
+
+## Usage Example
+
+```csharp
+var editor = new Editor
+{
+    X = 2,
+    Y = 2,
+    Width = 60,
+    Height = 20,
+    ShowLineNumbers = true,
+    ForegroundColor = Color.White,
+    BackgroundColor = Color.Black,
+    LineNumberColor = ColorHelper.FromRgb(100, 100, 100),
+    Text = "Welcome to Elaris.UI!\n\nStart typing to edit..."
+};
+
+editor.CursorMoved += (line, col) =>
+{
+    statusBar.RightText = $"Line {line + 1}, Col {col + 1}";
+};
+```
+
+## Related Widgets
+
+- **[CodeEditor](/widgets/input/code-editor)** — Editor with syntax highlighting, bracket matching, and auto-indent
+- **[TextField](/widgets/input/textfield)** — Single-line text input
+- **[TextView](/widgets/display/textview)** — Read-only multi-line text display
+- **[Base Widget](/widgets/base-widget)** — Base class documentation

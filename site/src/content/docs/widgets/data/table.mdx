@@ -1,0 +1,205 @@
+---
+title: Table
+description: A table widget for displaying tabular data with columns and rows
+---
+
+The `Table` widget displays data in a tabular format with columns, rows, headers, and selection support.
+
+## Overview
+
+`Table` is ideal for displaying structured data like lists of items, records, or any tabular information. It supports keyboard navigation, row selection, and various column types.
+
+## Properties
+
+### `Columns` (IReadOnlyList\<TableColumn\>)
+
+The table columns.
+
+```csharp
+foreach (var column in table.Columns)
+{
+    Console.WriteLine(column.Name);
+}
+```
+
+### `Rows` (IReadOnlyList\<TableRow\>)
+
+The table rows.
+
+```csharp
+foreach (var row in table.Rows)
+{
+    // Access row data
+}
+```
+
+### `DataSource` (IEnumerable?)
+
+An enumerable data source. Setting this automatically rebuilds rows.
+
+```csharp
+table.DataSource = myDataList;
+```
+
+### `SelectedRowIndex` (int)
+
+The index of the selected row (-1 if none).
+
+```csharp
+table.SelectedRowIndex = 0;
+```
+
+### `SelectedRow` (TableRow?, read-only)
+
+The currently selected row.
+
+```csharp
+var selected = table.SelectedRow;
+```
+
+### `ShowHeader` (bool)
+
+Whether to show the header row (default: true).
+
+```csharp
+table.ShowHeader = true;
+```
+
+### `ShowGridLines` (bool)
+
+Whether to show grid lines between columns (default: true).
+
+```csharp
+table.ShowGridLines = true;
+```
+
+### Color Properties
+
+- `HeaderForegroundColor`: Text color for header
+- `HeaderBackgroundColor`: Background color for header
+- `SelectedRowBackgroundColor`: Background for selected row
+- `SelectedRowForegroundColor`: Text color for selected row
+- `GridLineColor`: Color of grid lines
+- `EmptyStateForegroundColor`: Color for empty state message
+
+### Empty State
+
+- `EmptyStateMessage`: Message shown when table is empty
+- `EmptyStateWidget`: Custom widget shown when empty
+
+## Methods
+
+### `AddColumn(TableColumn column)`
+
+Adds a column to the table.
+
+```csharp
+var column = new TableColumn("Name", 20);
+table.AddColumn(column);
+```
+
+### `AddColumn(string name, int width = 15)`
+
+Creates and adds a column.
+
+```csharp
+table.AddColumn("Name", 20);
+```
+
+### `AddRow(object? data = null)`
+
+Adds a row to the table.
+
+```csharp
+var row = table.AddRow(myDataObject);
+```
+
+### `RemoveRow(TableRow row)`
+
+Removes a row from the table.
+
+```csharp
+table.RemoveRow(row);
+```
+
+### `ClearRows()`
+
+Clears all rows.
+
+```csharp
+table.ClearRows();
+```
+
+### `Refresh()`
+
+Refreshes the table, rebuilding rows if `DataSource` is set.
+
+```csharp
+table.Refresh();
+```
+
+## Events
+
+### `RowSelected`
+
+Raised when a row is selected.
+
+```csharp
+table.RowSelected += (row) =>
+{
+    Console.WriteLine($"Selected: {row.Data}");
+};
+```
+
+### `RowActivated`
+
+Raised when Enter is pressed on a row.
+
+```csharp
+table.RowActivated += (row) =>
+{
+    // Handle row activation
+};
+```
+
+## Keyboard Navigation
+
+- **Up/Down Arrow**: Navigate rows
+- **Home**: Move to first row
+- **End**: Move to last row
+- **Page Up/Down**: Scroll by page
+- **Enter**: Activate selected row
+- **Tab**: Navigate to next focusable widget
+
+## Usage Example
+
+```csharp
+var table = new Table
+{
+    X = 1,
+    Y = 1,
+    Width = 70,
+    Height = 20,
+    ShowHeader = true,
+    ShowGridLines = true
+};
+
+table.AddColumn("Name", 30).BindTo<Person>(p => p.Name);
+table.AddColumn("Age", 10).BindTo<Person>(p => p.Age);
+table.AddColumn("City", 20).BindTo<Person>(p => p.City);
+
+var people = new List<Person>
+{
+    new("Alice", 30, "New York"),
+    new("Bob", 25, "London")
+};
+
+table.DataSource = people;
+```
+
+## Related Widgets
+
+- **[TableColumn](/widgets/data/table-columns)** - Column configuration
+- **[TableRow](/widgets/data/table-columns)** - Row data
+- **[Specialized Columns](/widgets/data/table-specialized)** - CheckboxColumn, ProgressColumn
+

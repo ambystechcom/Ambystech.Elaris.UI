@@ -1,0 +1,82 @@
+---
+title: Menu Demo Example
+description: Demonstrating menu bar functionality
+---
+
+The Menu Demo shows how to create a traditional menu bar interface with dropdown menus, keyboard shortcuts, and checkable menu items.
+
+## What It Demonstrates
+
+- `MenuBar` widget
+- Creating menus with subitems
+- Menu separators
+- Checkable menu items
+- Keyboard shortcuts (hotkeys)
+- Event handling for menu actions
+
+## Key Features
+
+### Creating Menus
+
+```csharp
+var menuBar = new MenuBar
+{
+    X = 0,
+    Y = 0,
+    Height = 1,
+    ForegroundColor = Color.Black,
+    BackgroundColor = ColorHelper.FromRgb(200, 200, 200)
+};
+```
+
+### Adding Menu Items
+
+```csharp
+menuBar.AddMenu("File",
+    new MenuItem("New", () => statusBar.LeftText = "New file created", 'N'),
+    new MenuItem("Open", () => statusBar.LeftText = "Open file dialog", 'O'),
+    new MenuItem("Save", () => statusBar.LeftText = "File saved", 'S'),
+    MenuItem.Separator(),
+    new MenuItem("Exit", () => app.Stop(), 'x')
+);
+```
+
+### Checkable Menu Items
+
+```csharp
+var showToolbarItem = new MenuItem("Show Toolbar", null, 'T') { Checked = true };
+showToolbarItem.Selected += () =>
+{
+    showToolbarItem.Checked = !showToolbarItem.Checked;
+    statusBar.LeftText = $"Toolbar: {(showToolbarItem.Checked ? "Visible" : "Hidden")}";
+};
+```
+
+## Keyboard Navigation
+
+- **Tab**: Focus menu bar
+- **Left/Right Arrow**: Navigate menus
+- **Enter/Space/Down**: Open dropdown
+- **Up/Down Arrow**: Navigate menu items
+- **Enter/Space**: Select item
+- **Escape**: Close dropdown
+
+## Running the Example
+
+```bash
+cd examples/Elaris.Examples.MenuDemo
+dotnet run
+```
+
+## Learning Points
+
+- Menus provide a familiar desktop application interface
+- Keyboard shortcuts make menus accessible
+- Checkable items can toggle state
+- Separators organize menu items visually
+
+## Related Widgets
+
+- **[MenuBar](/widgets/menu/menubar)** - Menu bar widget
+- **[MenuItem](/widgets/menu/menuitem)** - Menu item widget
+

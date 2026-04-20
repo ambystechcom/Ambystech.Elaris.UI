@@ -4,12 +4,10 @@ on:
   push:
     branches:
       - develop
-      - 'feature/**'
-    paths:
-      - 'packages/plugins/**'
     paths-ignore:
       - 'src/**'
       - 'tests/**'
+      - 'site/**'
   workflow_dispatch:
 
 permissions:

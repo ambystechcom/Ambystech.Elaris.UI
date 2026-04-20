@@ -1,0 +1,160 @@
+---
+title: TextField
+description: A single-line text input widget
+---
+
+The `TextField` widget provides single-line text input with cursor support, placeholder text, and keyboard navigation.
+
+## Overview
+
+`TextField` is the primary widget for text input in Elaris.UI. It supports cursor movement, text editing, and placeholder text.
+
+## Properties
+
+### `Text` (string)
+
+The text content of the field.
+
+```csharp
+textField.Text = "Hello";
+```
+
+### `Placeholder` (string)
+
+Placeholder text shown when the field is empty.
+
+```csharp
+textField.Placeholder = "Enter your name...";
+```
+
+### `PlaceholderColor` (Color)
+
+Color of the placeholder text.
+
+```csharp
+textField.PlaceholderColor = Color.Gray;
+```
+
+### `CursorPosition` (int, read-only)
+
+The current cursor position.
+
+```csharp
+int pos = textField.CursorPosition;
+```
+
+## Events
+
+### `KeyPress`
+
+Raised when a key is pressed. Return `true` to mark as handled and prevent default behavior.
+
+```csharp
+textField.KeyPress += (key) =>
+{
+    if (key.Key == ConsoleKey.Enter)
+    {
+        // Handle Enter key
+        return true; // Mark as handled
+    }
+    return false; // Let default handler process it
+};
+```
+
+### `KeyDown`
+
+Raised when a key is pressed (fires before default handling).
+
+```csharp
+textField.KeyDown += (key) =>
+{
+    // Key is being pressed
+};
+```
+
+### `KeyUp`
+
+Raised when a key is released (fires after default handling).
+
+```csharp
+textField.KeyUp += (key) =>
+{
+    // Key was released
+};
+```
+
+### `TextChanged`
+
+Raised when the text content changes.
+
+```csharp
+textField.TextChanged += (newText) =>
+{
+    Console.WriteLine($"Text changed to: {newText}");
+};
+```
+
+### `Focused`
+
+Raised when the field receives focus.
+
+```csharp
+textField.Focused += () =>
+{
+    // Field is focused
+};
+```
+
+### `Blurred`
+
+Raised when the field loses focus.
+
+```csharp
+textField.Blurred += () =>
+{
+    // Field lost focus
+};
+```
+
+## Keyboard Navigation
+
+- **Left/Right Arrow**: Move cursor
+- **Home**: Move to start
+- **End**: Move to end
+- **Backspace**: Delete character before cursor
+- **Delete**: Delete character after cursor
+- **Enter**: Move cursor to end
+- **Tab**: Navigate to next focusable widget
+
+## Usage Example
+
+```csharp
+var textField = new TextField("Enter your name...")
+{
+    X = 10,
+    Y = 5,
+    Width = 40,
+    Height = 1,
+    ForegroundColor = Color.White,
+    BackgroundColor = ColorHelper.FromRgb(30, 30, 30),
+    PlaceholderColor = Color.Gray
+};
+
+textField.KeyPress += (key) =>
+{
+    if (key.Key == ConsoleKey.Enter)
+    {
+        Console.WriteLine($"Entered: {textField.Text}");
+        textField.Text = string.Empty;
+        return true;
+    }
+    return false;
+};
+```
+
+## Related Widgets
+
+- **[AutoCompleteTextField](/widgets/input/autocomplete-textfield)** - Text field with autocomplete
+- **[TextView](/widgets/display/textview)** - For multi-line text display
+- **[Base Widget](/widgets/base-widget)** - Base class documentation
+

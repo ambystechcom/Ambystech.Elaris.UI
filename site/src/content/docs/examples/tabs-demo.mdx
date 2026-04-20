@@ -1,0 +1,93 @@
+---
+title: Tabs Demo Example
+description: Demonstrating tabbed interfaces
+---
+
+The Tabs Demo shows how to create tabbed interfaces using `TabContainer`, with multiple tabs containing different content.
+
+## What It Demonstrates
+
+- `TabContainer` widget
+- Creating and managing tabs
+- Tab content with widgets
+- Tab navigation
+- Tab change events
+- Responsive layout with tabs
+
+## Key Features
+
+### Creating TabContainer
+
+```csharp
+var tabContainer = new TabContainer
+{
+    BackgroundColor = Color.Black,
+    TabBarBackgroundColor = ColorHelper.FromRgb(30, 30, 30),
+    ActiveTabBackgroundColor = ColorHelper.FromRgb(0, 120, 212),
+    ActiveTabForegroundColor = Color.White
+};
+```
+
+### Adding Tabs
+
+```csharp
+var dashboardTab = tabContainer.AddTab("Dashboard");
+dashboardTab.LayoutMode = LayoutMode.Fill;
+
+var actionsTab = tabContainer.AddTab("Quick Actions");
+var cleanupTab = tabContainer.AddTab("Cleanup");
+var helpTab = tabContainer.AddTab("Help");
+```
+
+### Tab Content
+
+```csharp
+var dashboardFrame = new Frame("System Dashboard")
+{
+    BorderStyle = BorderStyle.Rounded
+};
+
+var cpuLabel = new Label("CPU Usage: 42%");
+var cpuProgress = new ProgressBar { Value = 42 };
+
+dashboardFrame.Add(cpuLabel);
+dashboardFrame.Add(cpuProgress);
+dashboardTab.Add(dashboardFrame);
+```
+
+### Tab Events
+
+```csharp
+tabContainer.TabChanged += (currentTab, previousTab, currentIndex, previousIndex) =>
+{
+    statusBar.LeftText = $"Active: {currentTab.Title}";
+};
+```
+
+## Keyboard Navigation
+
+- **Left/Right Arrow**: Switch between tabs
+- **Home**: Jump to first tab
+- **End**: Jump to last tab
+- **Tab**: Navigate to next tab (when focused)
+
+## Running the Example
+
+```bash
+cd examples/Elaris.Examples.TabsDemo
+dotnet run
+```
+
+## Learning Points
+
+- Tabs organize content into separate views
+- Each tab can contain any widgets
+- Tab navigation is keyboard-accessible
+- Tab events enable dynamic content updates
+
+## Related Widgets
+
+- **[TabContainer](/widgets/layout/tabcontainer)** - Tab container widget
+- **[Tab](/widgets/layout/tabcontainer#tab)** - Individual tab
+- **[TabContent](/widgets/layout/tabcontainer#tabcontent)** - Tab content
+

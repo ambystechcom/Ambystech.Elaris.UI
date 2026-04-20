@@ -1,0 +1,112 @@
+---
+title: MenuBar
+description: A horizontal menu bar with dropdown menus
+---
+
+The `MenuBar` widget provides a traditional menu bar interface with dropdown menus, similar to desktop applications.
+
+## Overview
+
+`MenuBar` displays a horizontal bar of menu items. Each item can have a submenu that appears as a dropdown when activated.
+
+## Properties
+
+### `Items` (IReadOnlyList\<MenuItem\>)
+
+The menu items in the menu bar.
+
+```csharp
+foreach (var item in menuBar.Items)
+{
+    Console.WriteLine(item.Text);
+}
+```
+
+### Color Properties
+
+- `SelectedBackgroundColor`: Background for selected menu item
+- `SelectedForegroundColor`: Text color for selected menu item
+- `DropdownBackgroundColor`: Background for dropdown menus
+- `DropdownForegroundColor`: Text color for dropdown items
+- `DropdownSelectedBackgroundColor`: Background for selected dropdown item
+- `DropdownDisabledForegroundColor`: Text color for disabled items
+- `DropdownBorderColor`: Border color for dropdowns
+
+## Methods
+
+### `AddItem(MenuItem item)`
+
+Adds a menu item to the menu bar.
+
+```csharp
+var item = new MenuItem("File");
+menuBar.AddItem(item);
+```
+
+### `AddMenu(string text, params MenuItem[] subItems)`
+
+Creates and adds a menu with submenu items.
+
+```csharp
+menuBar.AddMenu("File",
+    new MenuItem("New", () => CreateNew(), 'N'),
+    new MenuItem("Open", () => OpenFile(), 'O'),
+    MenuItem.Separator(),
+    new MenuItem("Exit", () => app.Stop(), 'x')
+);
+```
+
+## Events
+
+### `ItemSelected`
+
+Raised when a menu item is selected.
+
+```csharp
+menuBar.ItemSelected += (item) =>
+{
+    Console.WriteLine($"Selected: {item.Text}");
+};
+```
+
+## Keyboard Navigation
+
+- **Left/Right Arrow**: Navigate menu items
+- **Enter/Space/Down Arrow**: Open dropdown menu
+- **Up/Down Arrow** (in dropdown): Navigate submenu items
+- **Enter/Space**: Select menu item
+- **Escape**: Close dropdown
+- **Tab**: Navigate to next focusable widget
+
+## Usage Example
+
+```csharp
+var menuBar = new MenuBar
+{
+    X = 0,
+    Y = 0,
+    Width = 80,
+    Height = 1,
+    ForegroundColor = Color.Black,
+    BackgroundColor = ColorHelper.FromRgb(200, 200, 200)
+};
+
+menuBar.AddMenu("File",
+    new MenuItem("New", () => Console.WriteLine("New"), 'N'),
+    new MenuItem("Open", () => Console.WriteLine("Open"), 'O'),
+    MenuItem.Separator(),
+    new MenuItem("Exit", () => app.Stop(), 'x')
+);
+
+menuBar.AddMenu("Edit",
+    new MenuItem("Cut", () => Console.WriteLine("Cut"), 't'),
+    new MenuItem("Copy", () => Console.WriteLine("Copy"), 'C'),
+    new MenuItem("Paste", () => Console.WriteLine("Paste"), 'P')
+);
+```
+
+## Related Widgets
+
+- **[MenuItem](/widgets/menu/menuitem)** - Individual menu items
+- **[MenuDropdown](/widgets/menu/menudropdown)** - Dropdown menu (internal)
+
