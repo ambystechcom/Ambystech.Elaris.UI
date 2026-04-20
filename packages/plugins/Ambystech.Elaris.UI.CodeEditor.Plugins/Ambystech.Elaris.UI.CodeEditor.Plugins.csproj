@@ -22,7 +22,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <RootNamespace>Ambystech.Elaris.UI.CodeEditor.Plugins</RootNamespace>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <packageIcon>icon.png</PackageIcon>
+    <PackageIcon>icon.png</PackageIcon>
   </PropertyGroup>
 
   <!-- This project depends on the main Elaris.UI library, perhaps in the future it could be replaced with latest Elaris Nuget -->
