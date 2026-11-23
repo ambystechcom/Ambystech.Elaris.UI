@@ -79,6 +79,33 @@ Elaris.UI is designed to work seamlessly across Windows, macOS, and Linux termin
 #### iTerm2 (macOS)
 ![iTerm2](assets/iterm2.png)
 
+## Threading and Redraws
+
+Widgets belong to the UI thread (the thread that calls `app.Run`). To update them from elsewhere, such as a timer or a network call, queue the change:
+
+```csharp
+// From any thread
+app.Post(() => statusLabel.Text = "Connected");
+
+// Wait for it, or get a value back
+var count = await app.InvokeAsync(() => listBox.Items.Count);
+```
+
+`await` inside key handlers and other UI code resumes on the UI thread, so this just works:
+
+```csharp
+async void LoadAsync()
+{
+    var items = await service.GetItemsAsync();   // runs in the background
+    listBox.ClearItems();                       // back on the UI thread
+    foreach (var item in items) listBox.AddItem(item);
+}
+```
+
+The screen is redrawn only when something may have changed: after input, after `Post`/`InvokeAsync`, after a resize, and when a widget calls `Invalidate()`. Idle apps use almost no CPU. If your code changes widgets from other threads without these, set `app.AlwaysRender = true` to redraw every frame as before.
+
+Exceptions thrown by key handlers or posted actions are raised on `app.UnhandledException`. Set `e.Handled = true` to keep running; otherwise the app stops, restores the terminal and `Run` rethrows the exception.
+
 ## Testing Your UI
 
 `VirtualTerminal` runs an application without a console. It decodes everything Elaris draws into a grid of cells you can inspect, and lets you queue key presses:
