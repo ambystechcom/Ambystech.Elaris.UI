@@ -263,7 +263,12 @@ public class AutoCompleteTextField : TextField
             }
 
             _listBox.Bounds = new Rectangle(popupX, popupY, popupWidth, popupHeight);
-            _listBox.Render(screen);
+
+            // The popup may extend past the container the field is in.
+            using (screen.PushOverlay())
+            {
+                _listBox.Render(screen);
+            }
         }
     }
 

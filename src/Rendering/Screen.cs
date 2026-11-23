@@ -20,6 +20,8 @@ public class Screen
     private readonly ITerminal _terminal;
     private readonly StringBuilder _output = new(4096);
     private readonly object _lock = new();
+    private readonly Stack<Rectangle> _clipStack = new();
+    private Rectangle _clip;
 
     /// <summary>
     /// Gets the screen width in columns.
@@ -35,6 +37,90 @@ public class Screen
     /// Gets the terminal this screen draws to.
     /// </summary>
     public ITerminal Terminal => _terminal;
+
+    /// <summary>
+    /// Gets the area that drawing is currently limited to. Drawing outside it is ignored.
+    /// The whole screen unless a clip has been pushed with <see cref="PushClip"/>.
+    /// </summary>
+    public Rectangle ClipRectangle
+    {
+        get
+        {
+            lock (_lock)
+                return _clip;
+        }
+    }
+
+    /// <summary>
+    /// Limits drawing to the intersection of <paramref name="area"/> and the current clip,
+    /// until the returned scope is disposed (or <see cref="PopClip"/> is called).
+    /// </summary>
+    /// <example>
+    /// <code>
+    /// using (screen.PushClip(innerArea))
+    /// {
+    ///     screen.WriteText(x, y, longText, fg, bg); // cut off at the edge of innerArea
+    /// }
+    /// </code>
+    /// </example>
+    public ClipScope PushClip(Rectangle area)
+    {
+        lock (_lock)
+        {
+            _clipStack.Push(_clip);
+            _clip = Rectangle.Intersect(_clip, area);
+            return new ClipScope(this);
+        }
+    }
+
+    /// <summary>
+    /// Lets drawing reach the whole screen, ignoring clips pushed by parent widgets,
+    /// until the returned scope is disposed. Use it for popups such as dropdowns and
+    /// suggestion lists that extend outside their container.
+    /// </summary>
+    public ClipScope PushOverlay()
+    {
+        lock (_lock)
+        {
+            _clipStack.Push(_clip);
+            _clip = FullScreen;
+            return new ClipScope(this);
+        }
+    }
+
+    /// <summary>
+    /// Restores the clip that was active before the last <see cref="PushClip"/> or <see cref="PushOverlay"/>.
+    /// </summary>
+    public void PopClip()
+    {
+        lock (_lock)
+        {
+            if (_clipStack.Count == 0)
+                throw new InvalidOperationException("PopClip was called more times than PushClip.");
+
+            _clip = _clipStack.Pop();
+        }
+    }
+
+    private Rectangle FullScreen => new(0, 0, Width, Height);
+
+    private bool IsInClip(int x, int y)
+        => x >= _clip.Left && x < _clip.Right && y >= _clip.Top && y < _clip.Bottom;
+
+    /// <summary>
+    /// Restores the previous clip when disposed. Returned by <see cref="PushClip"/> and <see cref="PushOverlay"/>.
+    /// </summary>
+    public readonly struct ClipScope : IDisposable
+    {
+        private readonly Screen? _screen;
+
+        internal ClipScope(Screen screen) => _screen = screen;
+
+        /// <summary>
+        /// Restores the previous clip.
+        /// </summary>
+        public void Dispose() => _screen?.PopClip();
+    }
 
     /// <summary>
     /// Creates a screen that draws to the console.
@@ -55,6 +141,7 @@ public class Screen
         _frontBuffer = new Cell[height, width];
         _backBuffer = new Cell[height, width];
         _renderer = new AnsiRenderer();
+        _clip = FullScreen;
 
         Clear();
     }
@@ -70,6 +157,8 @@ public class Screen
             Height = height;
             _frontBuffer = new Cell[height, width];
             _backBuffer = new Cell[height, width];
+            _clipStack.Clear();
+            _clip = FullScreen;
             Clear();
         }
     }
@@ -133,12 +222,10 @@ public class Screen
     /// </summary>
     public void SetCell(int x, int y, Cell cell)
     {
-        if (x < 0 || x >= Width || y < 0 || y >= Height)
-            return;
-
         lock (_lock)
         {
-            _backBuffer[y, x] = cell;
+            if (IsInClip(x, y))
+                _backBuffer[y, x] = cell;
         }
     }
 
@@ -159,10 +246,10 @@ public class Screen
             for (int i = 0; i < text.Length; i++)
             {
                 int posX = x + i;
-                if (posX >= Width)
+                if (posX >= _clip.Right)
                     break;
 
-                if (posX >= 0 && y >= 0 && y < Height)
+                if (IsInClip(posX, y))
                 {
                     _backBuffer[y, posX] = new Cell(text[i], foreground, background, bold, italic, underline);
                 }
@@ -188,14 +275,12 @@ public class Screen
 
         lock (_lock)
         {
-            for (int y = rect.Top; y < rect.Bottom && y < Height; y++)
+            var area = Rectangle.Intersect(rect, _clip);
+            for (int y = area.Top; y < area.Bottom; y++)
             {
-                for (int x = rect.Left; x < rect.Right && x < Width; x++)
+                for (int x = area.Left; x < area.Right; x++)
                 {
-                    if (x >= 0 && y >= 0)
-                    {
-                        _backBuffer[y, x] = new Cell(character, foreground, background);
-                    }
+                    _backBuffer[y, x] = new Cell(character, foreground, background);
                 }
             }
         }
@@ -206,41 +291,36 @@ public class Screen
     /// </summary>
     public void DrawRectangle(Rectangle rect, Color foreground, Color background)
     {
+        if (rect.Width <= 0 || rect.Height <= 0)
+            return;
+
         lock (_lock)
         {
-            // Top and bottom borders
-            for (int x = rect.Left; x < rect.Right && x < Width; x++)
+            void Put(int x, int y, char c)
             {
-                if (x >= 0)
-                {
-                    if (rect.Top >= 0 && rect.Top < Height)
-                        _backBuffer[rect.Top, x] = new Cell('─', foreground, background);
-                    if (rect.Bottom - 1 >= 0 && rect.Bottom - 1 < Height)
-                        _backBuffer[rect.Bottom - 1, x] = new Cell('─', foreground, background);
-                }
+                if (IsInClip(x, y))
+                    _backBuffer[y, x] = new Cell(c, foreground, background);
             }
 
-            // Left and right borders
-            for (int y = rect.Top; y < rect.Bottom && y < Height; y++)
+            int right = rect.Right - 1;
+            int bottom = rect.Bottom - 1;
+
+            for (int x = rect.Left; x <= right; x++)
             {
-                if (y >= 0)
-                {
-                    if (rect.Left >= 0 && rect.Left < Width)
-                        _backBuffer[y, rect.Left] = new Cell('│', foreground, background);
-                    if (rect.Right - 1 >= 0 && rect.Right - 1 < Width)
-                        _backBuffer[y, rect.Right - 1] = new Cell('│', foreground, background);
-                }
+                Put(x, rect.Top, '─');
+                Put(x, bottom, '─');
             }
 
-            // Corners
-            if (rect.Left >= 0 && rect.Left < Width && rect.Top >= 0 && rect.Top < Height)
-                _backBuffer[rect.Top, rect.Left] = new Cell('┌', foreground, background);
-            if (rect.Right - 1 >= 0 && rect.Right - 1 < Width && rect.Top >= 0 && rect.Top < Height)
-                _backBuffer[rect.Top, rect.Right - 1] = new Cell('┐', foreground, background);
-            if (rect.Left >= 0 && rect.Left < Width && rect.Bottom - 1 >= 0 && rect.Bottom - 1 < Height)
-                _backBuffer[rect.Bottom - 1, rect.Left] = new Cell('└', foreground, background);
-            if (rect.Right - 1 >= 0 && rect.Right - 1 < Width && rect.Bottom - 1 >= 0 && rect.Bottom - 1 < Height)
-                _backBuffer[rect.Bottom - 1, rect.Right - 1] = new Cell('┘', foreground, background);
+            for (int y = rect.Top; y <= bottom; y++)
+            {
+                Put(rect.Left, y, '│');
+                Put(right, y, '│');
+            }
+
+            Put(rect.Left, rect.Top, '┌');
+            Put(right, rect.Top, '┐');
+            Put(rect.Left, bottom, '└');
+            Put(right, bottom, '┘');
         }
     }
 
