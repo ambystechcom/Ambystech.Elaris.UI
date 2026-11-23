@@ -281,7 +281,6 @@ public class Button : Widget
                 endColor = GradientEndColor.Value;
             }
 
-            int textCharIndex = 0;
             for (int x = X + 1; x < X + Width - 1; x++)
             {
                 float t = (Width - 2) > 1 ? (float)(x - X - 1) / (Width - 3) : 0f;

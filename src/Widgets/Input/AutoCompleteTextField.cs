@@ -117,7 +117,7 @@ public class AutoCompleteTextField : TextField
             return;
         }
 
-        _listBox.Clear();
+        _listBox.ClearItems();
         int count = Math.Min(suggestions.Count, MaxSuggestions);
         for (int i = 0; i < count; i++)
         {
@@ -142,7 +142,7 @@ public class AutoCompleteTextField : TextField
         {
             _isPopupVisible = false;
             _listBox.Visible = false;
-            _listBox.Clear();
+            _listBox.ClearItems();
             PopupClosed?.Invoke();
         }
     }

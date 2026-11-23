@@ -85,9 +85,24 @@ public class ListBoxTests
         listBox.SelectedIndex = 0;
 
         // Act
-        listBox.Clear();
+        listBox.ClearItems();
 
         // Assert
+        listBox.Items.Should().BeEmpty();
+        listBox.SelectedIndex.Should().Be(-1);
+    }
+
+    [Fact]
+    public void Clear_Obsolete_StillClearsItems()
+    {
+        var listBox = new ListBox();
+        listBox.AddItem("Item 1");
+        listBox.SelectedIndex = 0;
+
+#pragma warning disable CS0618 // Clear() is obsolete; this verifies the alias still works.
+        listBox.Clear();
+#pragma warning restore CS0618
+
         listBox.Items.Should().BeEmpty();
         listBox.SelectedIndex.Should().Be(-1);
     }
