@@ -12,7 +12,11 @@ public abstract class Widget
     private Rectangle _bounds;
     private bool _visible = true;
     private bool _enabled = true;
-    protected  bool _hasFocus = false;
+    /// <summary>
+    /// Whether this widget currently has focus. Set by <see cref="OnFocus"/> and
+    /// <see cref="OnBlur"/>; overrides must call the base implementation.
+    /// </summary>
+    protected bool _hasFocus = false;
     private Widget? _parent;
     private readonly List<Widget> _children = [];
     private int _zIndex = 0;
@@ -57,6 +61,9 @@ public abstract class Widget
         set => Bounds = new Rectangle(_bounds.X, _bounds.Y, _bounds.Width, value);
     }
 
+    /// <summary>
+    /// Gets whether this widget currently has keyboard focus.
+    /// </summary>
     public bool HasFocus
     {
         get
@@ -237,14 +244,14 @@ public abstract class Widget
     protected virtual void OnChildRemoved(Widget child) { }
 
     /// <summary>
-    /// Called when the widget receives focus.
+    /// Called when the widget receives focus. Overrides must call the base implementation.
     /// </summary>
-    protected internal virtual void OnFocus() { }
+    protected internal virtual void OnFocus() => _hasFocus = true;
 
     /// <summary>
-    /// Called when the widget loses focus.
+    /// Called when the widget loses focus. Overrides must call the base implementation.
     /// </summary>
-    protected internal virtual void OnBlur() { }
+    protected internal virtual void OnBlur() => _hasFocus = false;
 
     /// <summary>
     /// Called when a key is pressed.

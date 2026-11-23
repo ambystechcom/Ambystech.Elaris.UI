@@ -39,6 +39,11 @@ public class Panel : Frame
         }
     }
 
+    /// <summary>
+    /// Panels are focusable so Space/Enter can toggle <see cref="Collapsed"/>.
+    /// </summary>
+    public override bool IsFocusable => true;
+
     public Panel() : base()
     {
         _expandedHeight = Height;

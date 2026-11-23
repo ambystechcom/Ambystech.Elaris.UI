@@ -23,7 +23,6 @@ public class Editor : Widget
     private readonly Stack<EditorState> _undoStack = new();
     private readonly Stack<EditorState> _redoStack = new();
     private const int MaxUndoHistory = 50;
-    protected bool _hasFocus = false;
 
     /// <summary>
     /// Gets or sets the full text content.
@@ -440,13 +439,11 @@ public class Editor : Widget
     protected internal override void OnFocus()
     {
         base.OnFocus();
-        _hasFocus = true;
     }
 
     protected internal override void OnBlur()
     {
         base.OnBlur();
-        _hasFocus = false;
         ClearSelection();
     }
 

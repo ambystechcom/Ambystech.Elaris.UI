@@ -1,15 +1,28 @@
 name: Build and Test
 
 on:
+  push:
+    branches:
+      - main
+      - develop
+    paths-ignore:
+      - 'site/**'
   pull_request:
     branches:
       - main
       - develop
+    paths-ignore:
+      - 'site/**'
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    name: Build and test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
     - name: Checkout code
@@ -24,19 +37,22 @@ jobs:
           10.0.x
 
     - name: Restore dependencies
-      run: dotnet restore src/Ambystech.Elaris.UI.csproj
+      run: dotnet restore Ambystech.Elaris.sln
 
+    # Builds the library, the plugins package, the tests and every example,
+    # so API changes that break an example (or the README quickstart, which
+    # mirrors the HelloWorld example) fail the build.
     - name: Build
-      run: dotnet build src/Ambystech.Elaris.UI.csproj --configuration Release --no-restore
+      run: dotnet build Ambystech.Elaris.sln --configuration Release --no-restore
 
     - name: Test
-      run: dotnet test tests/Ambystech.Elaris.UI.Tests.csproj --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx" --logger "html;LogFileName=test-results.html"
+      run: dotnet test tests/Ambystech.Elaris.UI.Tests.csproj --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" --logger "html;LogFileName=test-results.html"
 
     - name: Upload Test Results
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: test-results
+        name: test-results-${{ matrix.os }}
         path: |
           **/test-results.trx
           **/test-results.html

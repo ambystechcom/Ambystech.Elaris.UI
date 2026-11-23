@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using System.Drawing;
+using System.Runtime.InteropServices;
 using Ambystech.Elaris.UI.Input;
 using Ambystech.Elaris.UI.Rendering;
 using Ambystech.Elaris.UI.Widgets;
@@ -14,10 +16,13 @@ public class Application
     private Widget? _rootWidget;
     private Widget? _focusedWidget;
     private Widget? _initialFocusWidget;
-    private bool _running;
+    private volatile bool _running;
+    private volatile bool _stopRequested;
     private CancellationTokenSource? _cancellationTokenSource;
     private InputHandler? _inputHandler;
-    private List<Widget> _focusableWidgets = [];
+    private bool _previousTreatControlCAsInput;
+    private int _terminalRestored;
+    private readonly List<PosixSignalRegistration> _signalRegistrations = [];
 
     /// <summary>
     /// Gets the current screen instance.
@@ -30,6 +35,24 @@ public class Application
     public int TargetFps { get; set; } = 30;
 
     /// <summary>
+    /// Gets or sets the maximum number of queued key presses processed per frame.
+    /// Bounds the work done in a single frame when a large paste arrives.
+    /// </summary>
+    public int MaxKeysPerFrame { get; set; } = 256;
+
+    /// <summary>
+    /// Gets or sets the key that stops the application when the focused widget does not handle it.
+    /// Defaults to <see cref="ConsoleKey.Escape"/>. Set to <c>null</c> to disable.
+    /// Widgets that use the key (for example, closing a menu or a suggestion popup) take precedence.
+    /// </summary>
+    public ConsoleKey? QuitKey { get; set; } = ConsoleKey.Escape;
+
+    /// <summary>
+    /// Gets or sets whether Ctrl+C stops the application. Defaults to <c>true</c>.
+    /// </summary>
+    public bool QuitOnCtrlC { get; set; } = true;
+
+    /// <summary>
     /// Gets or sets the widget that should receive initial focus.
     /// Set this before calling Run().
     /// </summary>
@@ -40,6 +63,13 @@ public class Application
     }
 
     /// <summary>
+    /// Gets the widget that currently has keyboard focus.
+    /// </summary>
+    public Widget? FocusedWidget => _focusedWidget;
+
+    internal bool StopRequested => _stopRequested;
+
+    /// <summary>
     /// Runs the application with the specified root widget.
     /// </summary>
     public void Run(Widget rootWidget)
@@ -47,18 +77,23 @@ public class Application
         if (_running)
             throw new InvalidOperationException("Application is already running");
 
-        _rootWidget = rootWidget ?? throw new ArgumentNullException(nameof(rootWidget));
+        ArgumentNullException.ThrowIfNull(rootWidget);
+
         _running = true;
+        _stopRequested = false;
+        _terminalRestored = 0;
         _cancellationTokenSource = new CancellationTokenSource();
 
+        RegisterTerminalRestoreHandlers();
         try
         {
-            Initialize();
+            Initialize(rootWidget);
             RunEventLoop();
         }
         finally
         {
             Shutdown();
+            UnregisterTerminalRestoreHandlers();
         }
     }
 
@@ -67,11 +102,19 @@ public class Application
     /// </summary>
     public void Stop()
     {
+        _stopRequested = true;
         _running = false;
-        _cancellationTokenSource?.Cancel();
+        try
+        {
+            _cancellationTokenSource?.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+            // Already shut down.
+        }
     }
 
-    private void Initialize()
+    private void Initialize(Widget rootWidget)
     {
         int width = Console.WindowWidth;
         int height = Console.WindowHeight;
@@ -79,42 +122,54 @@ public class Application
         _screen = new Screen(width, height);
         _screen.Initialize();
 
+        try
+        {
+            _previousTreatControlCAsInput = Console.TreatControlCAsInput;
+            // Receive Ctrl+C as a key press so the loop can shut down cleanly.
+            Console.TreatControlCAsInput = true;
+        }
+        catch (IOException)
+        {
+            // Input is redirected; Ctrl+C will arrive through CancelKeyPress instead.
+        }
+
         _inputHandler = new InputHandler(_cancellationTokenSource!.Token);
 
-        if (_rootWidget != null)
-        {
-            _rootWidget.Bounds = new Rectangle(0, 0, width, height);
+        AttachRoot(rootWidget, new Rectangle(0, 0, width, height));
+    }
 
-            _focusableWidgets = GetFocusableWidgets(_rootWidget);
+    /// <summary>
+    /// Sets the root widget, its bounds and the initial focus without touching the console.
+    /// </summary>
+    internal void AttachRoot(Widget rootWidget, Rectangle bounds)
+    {
+        _rootWidget = rootWidget;
+        _rootWidget.Bounds = bounds;
 
-            if (_initialFocusWidget != null && _focusableWidgets.Contains(_initialFocusWidget))
-            {
-                _focusedWidget = _initialFocusWidget;
-            }
-            else if (_focusableWidgets.Any())
-            {
-                _focusedWidget = _focusableWidgets.First();
-            }
-            else
-            {
-                _focusedWidget = _rootWidget;
-            }
+        var focusable = GetFocusableWidgets();
 
-            _focusedWidget.OnFocus();
-        }
+        if (_initialFocusWidget != null && focusable.Contains(_initialFocusWidget))
+            _focusedWidget = _initialFocusWidget;
+        else if (focusable.Count > 0)
+            _focusedWidget = focusable[0];
+        else
+            _focusedWidget = _rootWidget;
+
+        _focusedWidget.OnFocus();
     }
 
     private void RunEventLoop()
     {
-        var frameTime = TimeSpan.FromMilliseconds(1000.0 / TargetFps);
-        var lastFrameTime = DateTime.UtcNow;
+        var stopwatch = new Stopwatch();
 
         while (_running && !_cancellationTokenSource!.Token.IsCancellationRequested)
         {
-            var currentTime = DateTime.UtcNow;
-            var elapsed = currentTime - lastFrameTime;
+            stopwatch.Restart();
 
             ProcessInput();
+
+            if (!_running)
+                break;
 
             HandleResize();
 
@@ -125,47 +180,62 @@ public class Application
                 _screen.Render();
             }
 
-            lastFrameTime = currentTime;
-
-            var sleepTime = frameTime - elapsed;
+            var frameTime = TimeSpan.FromMilliseconds(1000.0 / Math.Max(1, TargetFps));
+            var sleepTime = frameTime - stopwatch.Elapsed;
             if (sleepTime > TimeSpan.Zero)
             {
-                Thread.Sleep(sleepTime);
+                _cancellationTokenSource.Token.WaitHandle.WaitOne(sleepTime);
             }
         }
     }
 
     private void ProcessInput()
     {
-        if (_inputHandler == null || !_inputHandler.IsKeyAvailable())
+        if (_inputHandler == null)
             return;
 
-        var keyTask = _inputHandler.ReadKeyAsync();
-        keyTask.Wait(TimeSpan.FromMilliseconds(10));
-
-        if (keyTask.IsCompleted && keyTask.Result.HasValue)
+        for (int i = 0; i < MaxKeysPerFrame && _running; i++)
         {
-            var key = keyTask.Result.Value;
+            if (!_inputHandler.TryReadKey(out var key))
+                break;
 
-            if (key.Key == ConsoleKey.Escape || (key.Key == ConsoleKey.C && key.Modifiers.HasFlag(ConsoleModifiers.Control)))
-            {
-                Stop();
-                return;
-            }
+            HandleKey(key);
+        }
+    }
 
-            if (key.Key == ConsoleKey.RightArrow && key.Modifiers.HasFlag(ConsoleModifiers.Alt))
+    /// <summary>
+    /// Routes a key press: global shortcuts first, then the focused widget, then the quit key.
+    /// </summary>
+    internal void HandleKey(ConsoleKeyInfo key)
+    {
+        if (QuitOnCtrlC && key.Key == ConsoleKey.C && key.Modifiers.HasFlag(ConsoleModifiers.Control))
+        {
+            Stop();
+            return;
+        }
+
+        if (key.Modifiers.HasFlag(ConsoleModifiers.Alt))
+        {
+            if (key.Key == ConsoleKey.RightArrow)
             {
                 FocusNext(false);
                 return;
             }
 
-            if (key.Key == ConsoleKey.LeftArrow && key.Modifiers.HasFlag(ConsoleModifiers.Alt))
+            if (key.Key == ConsoleKey.LeftArrow)
             {
                 FocusNext(true);
                 return;
             }
+        }
 
-            _focusedWidget?.OnKeyPress(key);
+        EnsureFocusIsValid();
+
+        bool handled = _focusedWidget?.OnKeyPress(key) ?? false;
+
+        if (!handled && QuitKey.HasValue && key.Key == QuitKey.Value && key.Modifiers == 0)
+        {
+            Stop();
         }
     }
 
@@ -186,9 +256,96 @@ public class Application
 
     private void Shutdown()
     {
-        _screen?.Shutdown();
+        RestoreTerminal();
         _cancellationTokenSource?.Dispose();
+        _cancellationTokenSource = null;
         _running = false;
+    }
+
+    /// <summary>
+    /// Restores the terminal state. Safe to call more than once and from any thread.
+    /// </summary>
+    private void RestoreTerminal()
+    {
+        if (Interlocked.Exchange(ref _terminalRestored, 1) == 1)
+            return;
+
+        try
+        {
+            _screen?.Shutdown();
+        }
+        catch (IOException)
+        {
+            // The terminal may already be gone.
+        }
+
+        try
+        {
+            Console.TreatControlCAsInput = _previousTreatControlCAsInput;
+        }
+        catch (IOException)
+        {
+        }
+    }
+
+    private void RegisterTerminalRestoreHandlers()
+    {
+        Console.CancelKeyPress += OnCancelKeyPress;
+        AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
+        AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
+
+        // SIGTERM, SIGHUP and SIGQUIT would otherwise end the process without
+        // leaving the alternate screen. Cancel the default action and let the
+        // event loop exit normally so the terminal is restored.
+        foreach (var signal in new[] { PosixSignal.SIGTERM, PosixSignal.SIGHUP, PosixSignal.SIGQUIT })
+        {
+            try
+            {
+                _signalRegistrations.Add(PosixSignalRegistration.Create(signal, OnTerminationSignal));
+            }
+            catch (PlatformNotSupportedException)
+            {
+                // Not available on this platform.
+            }
+        }
+    }
+
+    private void UnregisterTerminalRestoreHandlers()
+    {
+        Console.CancelKeyPress -= OnCancelKeyPress;
+        AppDomain.CurrentDomain.ProcessExit -= OnProcessExit;
+        AppDomain.CurrentDomain.UnhandledException -= OnUnhandledException;
+
+        foreach (var registration in _signalRegistrations)
+            registration.Dispose();
+        _signalRegistrations.Clear();
+    }
+
+    private void OnTerminationSignal(PosixSignalContext context)
+    {
+        context.Cancel = true;
+        Stop();
+    }
+
+    private void OnCancelKeyPress(object? sender, ConsoleCancelEventArgs e)
+    {
+        if (QuitOnCtrlC)
+        {
+            // Let the event loop exit normally so the finally block restores the terminal.
+            e.Cancel = true;
+            Stop();
+        }
+    }
+
+    private void OnProcessExit(object? sender, EventArgs e)
+    {
+        Stop();
+        RestoreTerminal();
+    }
+
+    private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+    {
+        RestoreTerminal();
     }
 
     /// <summary>
@@ -204,63 +361,85 @@ public class Application
         _focusedWidget?.OnFocus();
     }
 
-    private void FocusNext(bool reverse = false)
+    /// <summary>
+    /// Moves focus to the next (or previous) focusable widget.
+    /// The focus order is recomputed each time, so widgets added, removed,
+    /// hidden or disabled after <see cref="Run"/> are taken into account.
+    /// </summary>
+    public void FocusNext(bool reverse = false)
     {
-        if (_focusableWidgets.Count == 0)
+        var focusable = GetFocusableWidgets();
+        if (focusable.Count == 0)
             return;
 
-        int currentIndex = _focusedWidget != null ? _focusableWidgets.IndexOf(_focusedWidget) : -1;
+        int currentIndex = _focusedWidget != null ? focusable.IndexOf(_focusedWidget) : -1;
 
-        if (reverse)
+        if (currentIndex < 0)
         {
-            currentIndex--;
-            if (currentIndex < 0)
-                currentIndex = _focusableWidgets.Count - 1;
+            currentIndex = reverse ? focusable.Count - 1 : 0;
+        }
+        else if (reverse)
+        {
+            currentIndex = currentIndex == 0 ? focusable.Count - 1 : currentIndex - 1;
         }
         else
         {
-            currentIndex++;
-            if (currentIndex >= _focusableWidgets.Count)
-                currentIndex = 0;
+            currentIndex = currentIndex == focusable.Count - 1 ? 0 : currentIndex + 1;
         }
 
-        SetFocus(_focusableWidgets[currentIndex]);
+        SetFocus(focusable[currentIndex]);
     }
 
-    private List<Widget> GetFocusableWidgets(Widget root)
+    /// <summary>
+    /// Returns the focusable widgets in tree order. Hidden or disabled widgets,
+    /// and everything beneath them, are skipped.
+    /// </summary>
+    internal List<Widget> GetFocusableWidgets()
     {
         var focusable = new List<Widget>();
-        CollectFocusableWidgets(root, focusable);
+        if (_rootWidget != null)
+            CollectFocusableWidgets(_rootWidget, focusable);
         return focusable;
     }
 
-    private void CollectFocusableWidgets(Widget widget, List<Widget> focusable)
+    private static void CollectFocusableWidgets(Widget widget, List<Widget> focusable)
     {
         if (!widget.Visible || !widget.Enabled)
             return;
 
         if (widget.IsFocusable)
-        {
             focusable.Add(widget);
-        }
 
-        var focusCollection = widget.Children.Where(widget => widget.Visible && widget.Enabled)
-            .SelectMany(GetAllFocusableWidgets);
-
-        focusable.AddRange(focusCollection);
+        foreach (var child in widget.Children)
+            CollectFocusableWidgets(child, focusable);
     }
 
-    IEnumerable<Widget> GetAllFocusableWidgets(Widget root)
+    /// <summary>
+    /// Moves focus away from a widget that was removed, hidden or disabled.
+    /// </summary>
+    private void EnsureFocusIsValid()
     {
-        yield return root;
-        foreach (var child in root.Children)
-        {
-            var focusable = GetAllFocusableWidgets(child).Where(x => x.IsFocusable);
+        if (_rootWidget == null || _focusedWidget == null || _focusedWidget == _rootWidget)
+            return;
 
-            foreach (var descendant in focusable)
-            {
-                yield return descendant;
-            }
+        if (IsReachable(_focusedWidget))
+            return;
+
+        var focusable = GetFocusableWidgets();
+        SetFocus(focusable.Count > 0 ? focusable[0] : _rootWidget);
+    }
+
+    private bool IsReachable(Widget widget)
+    {
+        for (var current = widget; current != null; current = current.Parent)
+        {
+            if (!current.Visible || !current.Enabled)
+                return false;
+
+            if (current == _rootWidget)
+                return true;
         }
+
+        return false;
     }
 }

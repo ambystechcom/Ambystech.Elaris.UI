@@ -11,7 +11,6 @@ public class TextField : Widget
 {
     private string _text = string.Empty;
     private int _cursorPosition = 0;
-    private bool _hasFocus = false;
     private string _placeholder = string.Empty;
     private Color _placeholderColor;
 
@@ -136,14 +135,12 @@ public class TextField : Widget
     protected internal override void OnFocus()
     {
         base.OnFocus();
-        _hasFocus = true;
         Focused?.Invoke();
     }
 
     protected internal override void OnBlur()
     {
         base.OnBlur();
-        _hasFocus = false;
         Blurred?.Invoke();
     }
 

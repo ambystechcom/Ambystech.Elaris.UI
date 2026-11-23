@@ -1,7 +1,7 @@
 namespace Ambystech.Elaris.UI.Input;
 
 /// <summary>
-/// Handles keyboard and mouse input from the console.
+/// Reads keyboard input from the console.
 /// </summary>
 public class InputHandler(CancellationToken cancellationToken = default)
 {
@@ -35,7 +35,34 @@ public class InputHandler(CancellationToken cancellationToken = default)
     }
 
     /// <summary>
+    /// Reads a key press if one is waiting, without blocking.
+    /// </summary>
+    /// <returns><c>true</c> if a key was read; otherwise <c>false</c>.</returns>
+    public bool TryReadKey(out ConsoleKeyInfo key)
+    {
+        if (!_cancellationToken.IsCancellationRequested && IsKeyAvailable())
+        {
+            key = Console.ReadKey(intercept: true);
+            return true;
+        }
+
+        key = default;
+        return false;
+    }
+
+    /// <summary>
     /// Checks if a key is available without blocking.
     /// </summary>
-    public bool IsKeyAvailable() => Console.KeyAvailable;
+    public bool IsKeyAvailable()
+    {
+        try
+        {
+            return Console.KeyAvailable;
+        }
+        catch (InvalidOperationException)
+        {
+            // Input is redirected; there is no interactive keyboard.
+            return false;
+        }
+    }
 }

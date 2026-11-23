@@ -299,7 +299,6 @@ public class TreeView : Widget
     protected internal override void OnFocus()
     {
         base.OnFocus();
-        _hasFocus = true;
 
         if (_selectedNode == null)
         {
@@ -314,7 +313,6 @@ public class TreeView : Widget
     protected internal override void OnBlur()
     {
         base.OnBlur();
-        _hasFocus = false;
     }
 
     protected internal override bool OnKeyPress(ConsoleKeyInfo key)

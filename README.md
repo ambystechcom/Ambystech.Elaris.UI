@@ -28,27 +28,45 @@ dotnet add package Ambystech.Elaris.UI
 
 ```csharp
 using Ambystech.Elaris.UI;
+using Ambystech.Elaris.UI.Core;
+using Ambystech.Elaris.UI.Enums;
+using Ambystech.Elaris.UI.Widgets.Display;
+using Ambystech.Elaris.UI.Widgets.Layout;
 
 // Create application
 var app = new Application();
 
-// Create main window
-var window = new Window("Hello Elaris")
+// Create the root frame (it fills the terminal)
+var frame = new Frame("Hello Elaris")
 {
-    Width = 80,
-    Height = 24
+    BorderStyle = BorderStyle.Rounded,
+    ForegroundColor = ColorHelper.FromRgb(100, 200, 255)
 };
 
 // Add widgets
 var label = new Label("Welcome to Elaris!")
 {
-    ForegroundColor = Color.FromRgb(100, 200, 255)
+    X = 2,
+    Y = 2,
+    Width = 40,
+    Height = 1,
+    ForegroundColor = ColorHelper.FromRgb(255, 200, 100)
 };
-window.Add(label);
+frame.Add(label);
 
-// Run application
-app.Run(window);
+// Run application (press Esc or Ctrl+C to exit)
+app.Run(frame);
 ```
+
+### Keyboard
+
+| Key | Action |
+|---|---|
+| `Alt+→` / `Alt+←` | Move focus to the next / previous widget |
+| `Esc` | Quit, unless the focused widget uses it (e.g. to close a menu). Change with `app.QuitKey`, or set it to `null` to disable |
+| `Ctrl+C` | Quit (disable with `app.QuitOnCtrlC = false`) |
+
+The terminal is restored on exit, including on Ctrl+C, process termination and unhandled exceptions.
 
 ### Cross Platform Compatibility
 
@@ -66,16 +84,16 @@ Elaris.UI is designed to work seamlessly across Windows, macOS, and Linux termin
 ```bash
 # Clone repository
 git clone https://github.com/ambystechcom/Ambystech.Elaris.UI.git elaris
-cd elaris/lib
+cd elaris
 
-# Restore dependencies
-dotnet restore
-
-# Build library
-dotnet build
+# Build the library, plugins and examples
+dotnet build Ambystech.Elaris.sln
 
 # Run tests
-dotnet test
+dotnet test tests/Ambystech.Elaris.UI.Tests.csproj
+
+# Run an example
+dotnet run --project examples/Elaris.Examples.HelloWorld -f net10.0
 ```
 
 ## Architecture
@@ -86,19 +104,26 @@ dotnet test
 - **Widget**: Base class for all UI components
 - **EventLoop**: Main application loop and event handling
 - **AnsiRenderer**: 24-bit RGB color rendering via ANSI codes
-- **InputHandler**: Keyboard and mouse input processing
+- **InputHandler**: Keyboard input processing
 
 ### Widget Hierarchy
 
 ```
 Widget (abstract base)
 ├── Container
-│   ├── Window
 │   ├── Frame
-│   └── Panel
-├── Label
+│   │   └── Panel
+│   ├── ResponsiveContainer
+│   └── TabContainer
+├── Label, ProgressBar, TreeView
+├── Button, Checkbox, ListBox
 ├── TextField
+│   └── AutoCompleteTextField
 ├── TextView
+├── Editor
+│   └── CodeEditor
+├── Table
+├── MenuBar
 └── StatusBar
 ```
 

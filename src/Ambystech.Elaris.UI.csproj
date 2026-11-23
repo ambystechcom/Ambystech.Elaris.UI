@@ -30,11 +30,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Drawing.Primitives" Version="4.3.0" />
-  </ItemGroup>
-
-
-  <ItemGroup>
     <None Include="../README.md" Pack="true" PackagePath="\" Condition="Exists('../README.md')" />
     <None Include="../icon.png" Pack="true" PackagePath="\" Condition="Exists('../icon.png')" />
   </ItemGroup>
