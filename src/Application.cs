@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Drawing;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using Ambystech.Elaris.UI.Rendering;
 using Ambystech.Elaris.UI.Terminal;
@@ -10,7 +11,7 @@ namespace Ambystech.Elaris.UI;
 /// <summary>
 /// Main application class that manages the event loop and rendering.
 /// </summary>
-public class Application
+public partial class Application
 {
     private Screen? _screen;
     private Widget? _rootWidget;
@@ -23,6 +24,10 @@ public class Application
     private bool _previousTreatControlCAsInput;
     private int _terminalRestored;
     private readonly List<PosixSignalRegistration> _signalRegistrations = [];
+    private readonly AutoResetEvent _wake = new(false);
+    private int _renderRequested;
+    private bool _isRendering;
+    private ExceptionDispatchInfo? _fatalException;
 
     /// <summary>
     /// Creates an application that runs in the console.
@@ -89,7 +94,21 @@ public class Application
     /// </summary>
     public Widget? FocusedWidget => _focusedWidget;
 
+    /// <summary>
+    /// Gets or sets whether to redraw every frame, even when nothing asked for a redraw.
+    /// Defaults to <c>false</c>: the screen is redrawn after input, queued actions, resizes and
+    /// <see cref="Widget.Invalidate"/>. Turn this on for code that changes widgets from other
+    /// threads without <see cref="Post"/>, <see cref="InvokeAsync(Action)"/> or
+    /// <see cref="Widget.Invalidate"/>.
+    /// </summary>
+    public bool AlwaysRender { get; set; }
+
     internal bool StopRequested => _stopRequested;
+
+    /// <summary>
+    /// Number of frames drawn by the current or last run.
+    /// </summary>
+    internal int RenderCount { get; private set; }
 
     /// <summary>
     /// Runs the application with the specified root widget.
@@ -104,7 +123,13 @@ public class Application
         _running = true;
         _stopRequested = false;
         _terminalRestored = 0;
+        _fatalException = null;
+        RenderCount = 0;
         _cancellationTokenSource = new CancellationTokenSource();
+        _uiThreadId = Environment.CurrentManagedThreadId;
+
+        var previousContext = SynchronizationContext.Current;
+        SynchronizationContext.SetSynchronizationContext(new ElarisSynchronizationContext(this));
 
         RegisterTerminalRestoreHandlers();
         try
@@ -116,7 +141,13 @@ public class Application
         {
             Shutdown();
             UnregisterTerminalRestoreHandlers();
+            SynchronizationContext.SetSynchronizationContext(previousContext);
+            _uiThreadId = -1;
+            rootWidget.RenderRequested = null;
+            CancelQueuedActions();
         }
+
+        _fatalException?.Throw();
     }
 
     /// <summary>
@@ -126,6 +157,7 @@ public class Application
     {
         _stopRequested = true;
         _running = false;
+        _wake.Set();
         try
         {
             _cancellationTokenSource?.Cancel();
@@ -164,6 +196,7 @@ public class Application
     internal void AttachRoot(Widget rootWidget, Rectangle bounds)
     {
         _rootWidget = rootWidget;
+        _rootWidget.RenderRequested = RequestRender;
         _rootWidget.Bounds = bounds;
 
         var focusable = GetFocusableWidgets();
@@ -178,46 +211,91 @@ public class Application
         _focusedWidget.OnFocus();
     }
 
+    /// <summary>
+    /// Asks for a redraw on the next frame. Thread-safe. Ignored while a frame is being drawn,
+    /// so layout changes made during rendering don't cause endless redraws.
+    /// </summary>
+    private void RequestRender()
+    {
+        if (_isRendering && CheckAccess())
+            return;
+
+        if (Interlocked.Exchange(ref _renderRequested, 1) == 0)
+            _wake.Set();
+    }
+
     private void RunEventLoop()
     {
-        var stopwatch = new Stopwatch();
+        var sinceLastRender = Stopwatch.StartNew();
+        bool needsRender = true;
+        var token = _cancellationTokenSource!.Token;
+        WaitHandle[] waitHandles = [token.WaitHandle, _wake];
 
-        while (_running && !_cancellationTokenSource!.Token.IsCancellationRequested)
+        while (_running && !token.IsCancellationRequested)
         {
-            stopwatch.Restart();
-
-            ProcessInput();
-
+            needsRender |= ProcessInput();
             if (!_running)
                 break;
 
-            HandleResize();
+            needsRender |= RunQueuedActions();
+            if (!_running)
+                break;
 
-            if (_screen != null && _rootWidget != null)
-            {
-                _screen.Clear();
-                _rootWidget.Render(_screen);
-                _screen.Render();
-            }
+            needsRender |= HandleResize();
+            needsRender |= Interlocked.Exchange(ref _renderRequested, 0) == 1;
+            needsRender |= AlwaysRender;
 
             var frameTime = TimeSpan.FromMilliseconds(1000.0 / Math.Max(1, TargetFps));
-            var sleepTime = frameTime - stopwatch.Elapsed;
-            if (sleepTime > TimeSpan.Zero)
+
+            if (needsRender && (RenderCount == 0 || sinceLastRender.Elapsed >= frameTime))
             {
-                _cancellationTokenSource.Token.WaitHandle.WaitOne(sleepTime);
+                RenderFrame();
+                sinceLastRender.Restart();
+                needsRender = false;
             }
+
+            // Keys can't wake the loop, so poll once per frame. Queued actions and
+            // Invalidate() wake it early. A pending redraw waits out the rest of the frame.
+            var wait = needsRender ? frameTime - sinceLastRender.Elapsed : frameTime;
+            if (wait > TimeSpan.Zero)
+                WaitHandle.WaitAny(waitHandles, wait);
         }
     }
 
-    private void ProcessInput()
+    private void RenderFrame()
     {
+        if (_screen == null || _rootWidget == null)
+            return;
+
+        _isRendering = true;
+        try
+        {
+            _screen.Clear();
+            _rootWidget.Render(_screen);
+            _screen.Render();
+            RenderCount++;
+        }
+        finally
+        {
+            _isRendering = false;
+        }
+    }
+
+    /// <returns><c>true</c> if any key was read.</returns>
+    private bool ProcessInput()
+    {
+        bool any = false;
+
         for (int i = 0; i < MaxKeysPerFrame && _running; i++)
         {
             if (!_terminal.TryReadKey(out var key))
                 break;
 
-            HandleKey(key);
+            any = true;
+            RunOnUiThread(() => HandleKey(key));
         }
+
+        return any;
     }
 
     /// <summary>
@@ -256,10 +334,11 @@ public class Application
         }
     }
 
-    private void HandleResize()
+    /// <returns><c>true</c> if the terminal size changed.</returns>
+    private bool HandleResize()
     {
         if (_screen == null || _rootWidget == null)
-            return;
+            return false;
 
         int currentWidth = _terminal.Width;
         int currentHeight = _terminal.Height;
@@ -268,7 +347,10 @@ public class Application
         {
             _screen.Resize(currentWidth, currentHeight);
             _rootWidget.Bounds = new Rectangle(0, 0, currentWidth, currentHeight);
+            return true;
         }
+
+        return false;
     }
 
     private void Shutdown()
