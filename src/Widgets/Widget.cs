@@ -20,6 +20,13 @@ public abstract class Widget
     private Widget? _parent;
     private readonly List<Widget> _children = [];
     private int _zIndex = 0;
+    private Color _foregroundColor = Color.White;
+    private Color _backgroundColor = Color.Transparent;
+
+    /// <summary>
+    /// Set on the root widget by <see cref="Application"/>; called by <see cref="Invalidate"/>.
+    /// </summary>
+    internal Action? RenderRequested { get; set; }
 
     /// <summary>
     /// Gets or sets the bounds of this widget.
@@ -33,6 +40,7 @@ public abstract class Widget
             {
                 _bounds = value;
                 OnBoundsChanged();
+                Invalidate();
             }
         }
     }
@@ -89,6 +97,7 @@ public abstract class Widget
             {
                 _visible = value;
                 OnVisibleChanged();
+                Invalidate();
             }
         }
     }
@@ -105,6 +114,7 @@ public abstract class Widget
             {
                 _enabled = value;
                 OnEnabledChanged();
+                Invalidate();
             }
         }
     }
@@ -122,12 +132,34 @@ public abstract class Widget
     /// <summary>
     /// Gets or sets the foreground color.
     /// </summary>
-    public Color ForegroundColor { get; set; } = Color.White;
+    public Color ForegroundColor
+    {
+        get => _foregroundColor;
+        set
+        {
+            if (_foregroundColor != value)
+            {
+                _foregroundColor = value;
+                Invalidate();
+            }
+        }
+    }
 
     /// <summary>
     /// Gets or sets the background color.
     /// </summary>
-    public Color BackgroundColor { get; set; } = Color.Transparent;
+    public Color BackgroundColor
+    {
+        get => _backgroundColor;
+        set
+        {
+            if (_backgroundColor != value)
+            {
+                _backgroundColor = value;
+                Invalidate();
+            }
+        }
+    }
 
     /// <summary>
     /// Gets or sets the Z-index for rendering order. Higher values render on top.
@@ -141,6 +173,7 @@ public abstract class Widget
             {
                 _zIndex = value;
                 _parent?.SortChildrenByZIndex();
+                Invalidate();
             }
         }
     }
@@ -162,6 +195,7 @@ public abstract class Widget
         _children.Add(child);
         child._parent = this;
         OnChildAdded(child);
+        Invalidate();
     }
 
     /// <summary>
@@ -173,6 +207,7 @@ public abstract class Widget
         {
             child._parent = null;
             OnChildRemoved(child);
+            Invalidate();
             return true;
         }
         return false;
@@ -187,6 +222,26 @@ public abstract class Widget
         {
             Remove(child);
         }
+    }
+
+    /// <summary>
+    /// Asks the running <see cref="Application"/> to redraw the screen.
+    /// </summary>
+    /// <remarks>
+    /// The application redraws after input, after actions queued with
+    /// <see cref="Application.Post"/> or <see cref="Application.InvokeAsync(Action)"/>, after a
+    /// resize, and after changes to <see cref="Bounds"/>, <see cref="Visible"/>, <see cref="Enabled"/>,
+    /// colors, <see cref="ZIndex"/> or children. Call this when a widget's appearance changes for
+    /// any other reason. It can be called from any thread, but widget state should only be changed
+    /// on the UI thread.
+    /// </remarks>
+    public void Invalidate()
+    {
+        var root = this;
+        while (root._parent != null)
+            root = root._parent;
+
+        root.RenderRequested?.Invoke();
     }
 
     /// <summary>
