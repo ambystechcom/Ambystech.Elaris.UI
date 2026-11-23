@@ -12,7 +12,6 @@ public class Button : Widget
 {
     private string _text = string.Empty;
     private bool _isPressed = false;
-    private bool _hasFocus = false;
 
     /// <summary>
     /// Gets or sets the button text.
@@ -342,13 +341,11 @@ public class Button : Widget
     protected internal override void OnFocus()
     {
         base.OnFocus();
-        _hasFocus = true;
     }
 
     protected internal override void OnBlur()
     {
         base.OnBlur();
-        _hasFocus = false;
         _isPressed = false;
     }
 

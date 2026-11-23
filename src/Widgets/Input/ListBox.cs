@@ -12,7 +12,6 @@ public class ListBox : Widget
     private List<string> _items = new();
     private int _selectedIndex = -1;
     private int _scrollOffset = 0;
-    private bool _hasFocus = false;
 
     /// <summary>
     /// Gets the list of items.
@@ -178,7 +177,6 @@ public class ListBox : Widget
     protected internal override void OnFocus()
     {
         base.OnFocus();
-        _hasFocus = true;
 
         if (_selectedIndex == -1 && _items.Count > 0)
         {
@@ -189,7 +187,6 @@ public class ListBox : Widget
     protected internal override void OnBlur()
     {
         base.OnBlur();
-        _hasFocus = false;
     }
 
     protected internal override bool OnKeyPress(ConsoleKeyInfo key)

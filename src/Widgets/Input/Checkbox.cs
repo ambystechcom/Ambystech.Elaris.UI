@@ -10,7 +10,6 @@ public class Checkbox : Widget
 {
     private bool _isChecked = false;
     private string _label = string.Empty;
-    private bool _hasFocus = false;
 
     /// <summary>
     /// Gets or sets whether the checkbox is checked.
@@ -106,13 +105,11 @@ public class Checkbox : Widget
     protected internal override void OnFocus()
     {
         base.OnFocus();
-        _hasFocus = true;
     }
 
     protected internal override void OnBlur()
     {
         base.OnBlur();
-        _hasFocus = false;
     }
 
     protected internal override bool OnKeyPress(ConsoleKeyInfo key)
