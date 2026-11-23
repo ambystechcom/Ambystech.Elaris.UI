@@ -82,9 +82,11 @@ public class ApplicationRunTests
         WaitUntil(() => app.Screen != null, "the screen is created");
 
         terminal.Resize(30, 6);
+
+        // The screen and the root widget are resized one after the other on the UI thread,
+        // so wait for both instead of reading the second right after the first changes.
         WaitUntil(() => app.Screen!.Width == 30 && app.Screen.Height == 6, "the screen is resized");
-        root.Bounds.Width.Should().Be(30);
-        root.Bounds.Height.Should().Be(6);
+        WaitUntil(() => root.Bounds.Width == 30 && root.Bounds.Height == 6, "the root widget is resized");
 
         app.Stop();
         run.Wait(Timeout).Should().BeTrue();
