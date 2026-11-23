@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
-using Ambystech.Elaris.UI.Input;
 using Ambystech.Elaris.UI.Rendering;
+using Ambystech.Elaris.UI.Terminal;
 using Ambystech.Elaris.UI.Widgets;
 
 namespace Ambystech.Elaris.UI;
@@ -19,10 +19,32 @@ public class Application
     private volatile bool _running;
     private volatile bool _stopRequested;
     private CancellationTokenSource? _cancellationTokenSource;
-    private InputHandler? _inputHandler;
+    private readonly ITerminal _terminal;
     private bool _previousTreatControlCAsInput;
     private int _terminalRestored;
     private readonly List<PosixSignalRegistration> _signalRegistrations = [];
+
+    /// <summary>
+    /// Creates an application that runs in the console.
+    /// </summary>
+    public Application()
+        : this(new ConsoleTerminal())
+    {
+    }
+
+    /// <summary>
+    /// Creates an application that runs in the given terminal.
+    /// Pass a <see cref="VirtualTerminal"/> to run an application in tests.
+    /// </summary>
+    public Application(ITerminal terminal)
+    {
+        _terminal = terminal ?? throw new ArgumentNullException(nameof(terminal));
+    }
+
+    /// <summary>
+    /// Gets the terminal the application runs in.
+    /// </summary>
+    public ITerminal Terminal => _terminal;
 
     /// <summary>
     /// Gets the current screen instance.
@@ -116,24 +138,22 @@ public class Application
 
     private void Initialize(Widget rootWidget)
     {
-        int width = Console.WindowWidth;
-        int height = Console.WindowHeight;
+        int width = _terminal.Width;
+        int height = _terminal.Height;
 
-        _screen = new Screen(width, height);
+        _screen = new Screen(width, height, _terminal);
         _screen.Initialize();
 
         try
         {
-            _previousTreatControlCAsInput = Console.TreatControlCAsInput;
+            _previousTreatControlCAsInput = _terminal.TreatControlCAsInput;
             // Receive Ctrl+C as a key press so the loop can shut down cleanly.
-            Console.TreatControlCAsInput = true;
+            _terminal.TreatControlCAsInput = true;
         }
         catch (IOException)
         {
             // Input is redirected; Ctrl+C will arrive through CancelKeyPress instead.
         }
-
-        _inputHandler = new InputHandler(_cancellationTokenSource!.Token);
 
         AttachRoot(rootWidget, new Rectangle(0, 0, width, height));
     }
@@ -191,12 +211,9 @@ public class Application
 
     private void ProcessInput()
     {
-        if (_inputHandler == null)
-            return;
-
         for (int i = 0; i < MaxKeysPerFrame && _running; i++)
         {
-            if (!_inputHandler.TryReadKey(out var key))
+            if (!_terminal.TryReadKey(out var key))
                 break;
 
             HandleKey(key);
@@ -244,8 +261,8 @@ public class Application
         if (_screen == null || _rootWidget == null)
             return;
 
-        int currentWidth = Console.WindowWidth;
-        int currentHeight = Console.WindowHeight;
+        int currentWidth = _terminal.Width;
+        int currentHeight = _terminal.Height;
 
         if (currentWidth != _screen.Width || currentHeight != _screen.Height)
         {
@@ -281,7 +298,7 @@ public class Application
 
         try
         {
-            Console.TreatControlCAsInput = _previousTreatControlCAsInput;
+            _terminal.TreatControlCAsInput = _previousTreatControlCAsInput;
         }
         catch (IOException)
         {
@@ -290,6 +307,10 @@ public class Application
 
     private void RegisterTerminalRestoreHandlers()
     {
+        // Process-wide handlers only make sense when drawing to the real console.
+        if (_terminal is not ConsoleTerminal)
+            return;
+
         Console.CancelKeyPress += OnCancelKeyPress;
         AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
         AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;

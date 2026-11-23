@@ -79,6 +79,25 @@ Elaris.UI is designed to work seamlessly across Windows, macOS, and Linux termin
 #### iTerm2 (macOS)
 ![iTerm2](assets/iterm2.png)
 
+## Testing Your UI
+
+`VirtualTerminal` runs an application without a console. It decodes everything Elaris draws into a grid of cells you can inspect, and lets you queue key presses:
+
+```csharp
+using Ambystech.Elaris.UI.Terminal;
+
+var terminal = new VirtualTerminal(width: 40, height: 6);
+var app = new Application(terminal);
+
+terminal.EnqueueText("hello");
+terminal.EnqueueKey(ConsoleKey.Escape);   // quits after the keys are handled
+
+app.Run(root);
+
+// After Run returns the terminal is back on the main screen;
+// check terminal.GetText() / GetCell(x, y) while the app is running.
+```
+
 ## Building from Source
 
 ```bash
@@ -100,11 +119,11 @@ dotnet run --project examples/Elaris.Examples.HelloWorld -f net10.0
 
 ### Core Components
 
-- **Screen**: Terminal screen abstraction with buffering
-- **Widget**: Base class for all UI components
-- **EventLoop**: Main application loop and event handling
+- **Application**: Main loop, focus handling and key routing
+- **Screen**: Double-buffered screen; writes only the cells that changed
+- **ITerminal**: Where output goes and keys come from. `ConsoleTerminal` is the real console; `VirtualTerminal` is in memory, for tests
 - **AnsiRenderer**: 24-bit RGB color rendering via ANSI codes
-- **InputHandler**: Keyboard input processing
+- **Widget**: Base class for all UI components
 
 ### Widget Hierarchy
 
