@@ -118,14 +118,21 @@ public class ListBox : Widget
     }
 
     /// <summary>
-    /// Clears all items.
+    /// Removes all items and resets the selection and scroll position.
     /// </summary>
-    public void Clear()
+    public void ClearItems()
     {
         _items.Clear();
         _selectedIndex = -1;
         _scrollOffset = 0;
     }
+
+    /// <summary>
+    /// Removes all items. This hides <see cref="Widget.Clear"/>, which removes child widgets;
+    /// calling <c>Clear()</c> through a <see cref="Widget"/> reference does not clear the items.
+    /// </summary>
+    [Obsolete("Use ClearItems(). Clear() hides Widget.Clear(), which removes child widgets instead of items.")]
+    public new void Clear() => ClearItems();
 
     protected override void OnRender(Screen screen)
     {

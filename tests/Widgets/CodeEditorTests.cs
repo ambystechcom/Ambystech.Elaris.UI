@@ -55,7 +55,7 @@ public class CodeEditorTests
         var match = codeEditor.FindMatchingBracket(0, 16);
 
         match.Should().NotBeNull();
-        match.Value.Y.Should().Be(2);
+        match!.Value.Y.Should().Be(2);
         match.Value.X.Should().Be(0);
     }
 

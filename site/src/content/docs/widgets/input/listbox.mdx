@@ -61,13 +61,15 @@ Removes an item at the specified index.
 listBox.RemoveItemAt(0);
 ```
 
-### `Clear()`
+### `ClearItems()`
 
-Clears all items.
+Removes all items and resets the selection and scroll position.
 
 ```csharp
-listBox.Clear();
+listBox.ClearItems();
 ```
+
+`Clear()` still works but is obsolete: it hides `Widget.Clear()`, which removes child widgets, so calling it through a `Widget` reference doesn't clear the items.
 
 ## Events
 
