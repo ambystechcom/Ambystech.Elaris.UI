@@ -60,6 +60,22 @@ public class Frame : Container
         set => _cornerRadius = Math.Max(0, value);
     }
 
+    /// <summary>
+    /// Children are clipped to the area inside the border, so they can't draw over it.
+    /// </summary>
+    protected override Rectangle? ChildClipRectangle
+    {
+        get
+        {
+            if (!ClipChildren || Width <= 0 || Height <= 0)
+                return null;
+
+            return _borderStyle == BorderStyle.None
+                ? Bounds
+                : new Rectangle(X + 1, Y + 1, Math.Max(0, Width - 2), Math.Max(0, Height - 2));
+        }
+    }
+
     protected override void OnRender(Screen screen)
     {
         if (Width < 2 || Height < 2)

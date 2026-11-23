@@ -262,11 +262,35 @@ public abstract class Widget
 
         OnRender(screen);
 
+        if (_children.Count == 0)
+            return;
+
+        if (ChildClipRectangle is { } clip)
+        {
+            using (screen.PushClip(clip))
+            {
+                RenderChildren(screen);
+            }
+        }
+        else
+        {
+            RenderChildren(screen);
+        }
+    }
+
+    private void RenderChildren(Screen screen)
+    {
         foreach (var child in _children)
         {
             child.Render(screen);
         }
     }
+
+    /// <summary>
+    /// The area children are clipped to, or <c>null</c> to not clip them (the default).
+    /// <see cref="Layout.Container"/> clips children to its bounds.
+    /// </summary>
+    protected virtual Rectangle? ChildClipRectangle => null;
 
     /// <summary>
     /// Called when the widget needs to render itself.

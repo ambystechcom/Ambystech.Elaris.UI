@@ -79,6 +79,18 @@ Elaris.UI is designed to work seamlessly across Windows, macOS, and Linux termin
 #### iTerm2 (macOS)
 ![iTerm2](assets/iterm2.png)
 
+## Layout and Clipping
+
+Widget positions (`X`, `Y`) are absolute screen coordinates. To keep children inside a frame that is itself positioned by a layout, let the frame lay them out (`Frame` is a `Container`):
+
+```csharp
+var frame = new Frame("Details") { LayoutMode = LayoutMode.Vertical, Padding = 1, Height = 6 };
+frame.Add(new Label("Name: Elaris") { Height = 1 });
+frame.Add(new Label("Version: 0.1") { Height = 1 });
+```
+
+Containers clip their children, so nothing a child draws can spill outside: a `Frame` clips to the area inside its border, other containers to their bounds. Containers without a size don't clip, and `ClipChildren = false` turns it off. Popups that must extend past their container, like dropdowns, draw inside `screen.PushOverlay()`.
+
 ## Threading and Redraws
 
 Widgets belong to the UI thread (the thread that calls `app.Run`). To update them from elsewhere, such as a timer or a network call, queue the change:

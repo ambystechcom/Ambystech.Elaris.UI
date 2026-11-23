@@ -62,6 +62,17 @@ public class Container : Widget
         }
     }
 
+    /// <summary>
+    /// Gets or sets whether children are clipped to this container's bounds, so they can't draw
+    /// outside it. Defaults to <c>true</c>. Containers without a size never clip. Popups that need
+    /// to extend outside their container draw inside <see cref="Screen.PushOverlay"/>.
+    /// </summary>
+    public bool ClipChildren { get; set; } = true;
+
+    /// <inheritdoc />
+    protected override Rectangle? ChildClipRectangle
+        => ClipChildren && Width > 0 && Height > 0 ? Bounds : null;
+
     public Container() => BackgroundColor = Color.Transparent;
 
     protected override void OnRender(Screen screen)

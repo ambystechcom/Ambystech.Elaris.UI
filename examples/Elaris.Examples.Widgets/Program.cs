@@ -16,8 +16,13 @@ var container = new Container
     BackgroundColor = Color.Black
 };
 
+// Each frame lays out its own children inside its border. Widget positions are absolute
+// screen coordinates, so fixed X/Y values would not follow the frame when the outer
+// container moves it.
 var headerFrame = new Frame("Elaris Widget Showcase")
 {
+    LayoutMode = LayoutMode.Vertical,
+    Padding = 1,
     Height = 5,
     BorderStyle = BorderStyle.Double,
     ForegroundColor = ColorHelper.FromRgb(100, 200, 255),
@@ -26,9 +31,6 @@ var headerFrame = new Frame("Elaris Widget Showcase")
 
 var headerLabel = new Label("Explore all available widgets")
 {
-    X = 2,
-    Y = 2,
-    Width = 50,
     Height = 1,
     ForegroundColor = ColorHelper.FromRgb(200, 200, 200),
     BackgroundColor = Color.Black
@@ -37,6 +39,8 @@ headerFrame.Add(headerLabel);
 
 var labelsFrame = new Frame("Labels")
 {
+    LayoutMode = LayoutMode.Vertical,
+    Padding = 1,
     Height = 7,
     BorderStyle = BorderStyle.Single,
     ForegroundColor = Color.Yellow,
@@ -45,9 +49,6 @@ var labelsFrame = new Frame("Labels")
 
 var normalLabel = new Label("Normal Label")
 {
-    X = 2,
-    Y = 2,
-    Width = 30,
     Height = 1,
     ForegroundColor = Color.White,
     BackgroundColor = Color.Black
@@ -55,9 +56,6 @@ var normalLabel = new Label("Normal Label")
 
 var boldLabel = new Label("Bold Label")
 {
-    X = 2,
-    Y = 3,
-    Width = 30,
     Height = 1,
     Bold = true,
     ForegroundColor = ColorHelper.FromRgb(100, 255, 100),
@@ -66,9 +64,6 @@ var boldLabel = new Label("Bold Label")
 
 var italicLabel = new Label("Italic Label")
 {
-    X = 2,
-    Y = 4,
-    Width = 30,
     Height = 1,
     Italic = true,
     ForegroundColor = Color.Cyan,
@@ -81,6 +76,8 @@ labelsFrame.Add(italicLabel);
 
 var textViewFrame = new Frame("TextView (Scrollable)")
 {
+    LayoutMode = LayoutMode.Fill,
+    Padding = 1,
     Height = 10,
     BorderStyle = BorderStyle.Rounded,
     ForegroundColor = Color.Magenta,
@@ -89,10 +86,6 @@ var textViewFrame = new Frame("TextView (Scrollable)")
 
 var textView = new TextView
 {
-    X = 2,
-    Y = 2,
-    Width = 50,
-    Height = 6,
     ForegroundColor = Color.White,
     BackgroundColor = Color.Black
 };
