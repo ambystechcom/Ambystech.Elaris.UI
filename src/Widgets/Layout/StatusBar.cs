@@ -11,8 +11,6 @@ public class StatusBar : Widget
     private string _leftText = string.Empty;
     private string _centerText = string.Empty;
     private string _rightText = string.Empty;
-    private Color _statusBarBackground = Color.DarkGray;
-    private Color _statusBarForeground = Color.White;
 
     /// <summary>
     /// Gets or sets the text displayed on the left side.
@@ -46,18 +44,22 @@ public class StatusBar : Widget
     /// </summary>
     public Color StatusBarBackground
     {
-        get => _statusBarBackground;
-        set => _statusBarBackground = value;
+        get => _statusBarBackground ?? EffectiveTheme.Track;
+        set => SetColor(ref _statusBarBackground, value);
     }
+
+    private Color? _statusBarBackground;
 
     /// <summary>
     /// Gets or sets the status bar foreground color.
     /// </summary>
     public Color StatusBarForeground
     {
-        get => _statusBarForeground;
-        set => _statusBarForeground = value;
+        get => _statusBarForeground ?? EffectiveTheme.Foreground;
+        set => SetColor(ref _statusBarForeground, value);
     }
+
+    private Color? _statusBarForeground;
 
     public StatusBar()
     {
@@ -69,14 +71,14 @@ public class StatusBar : Widget
         if (Width <= 0 || Height <= 0)
             return;
 
-        screen.FillRectangle(Bounds, ' ', _statusBarForeground, _statusBarBackground);
+        screen.FillRectangle(Bounds, ' ', StatusBarForeground, StatusBarBackground);
 
         if (!string.IsNullOrEmpty(_leftText))
         {
             string leftDisplay = _leftText.Length > Width / 3
                 ? _leftText[..(Width / 3)]
                 : _leftText;
-            screen.WriteText(X, Y, leftDisplay, _statusBarForeground, _statusBarBackground);
+            screen.WriteText(X, Y, leftDisplay, StatusBarForeground, StatusBarBackground);
         }
 
         if (!string.IsNullOrEmpty(_centerText))
@@ -88,7 +90,7 @@ public class StatusBar : Widget
                 ? _centerText.Substring(0, Width / 3)
                 : _centerText;
 
-            screen.WriteText(centerX, Y, centerDisplay, _statusBarForeground, _statusBarBackground);
+            screen.WriteText(centerX, Y, centerDisplay, StatusBarForeground, StatusBarBackground);
         }
 
         if (!string.IsNullOrEmpty(_rightText))
@@ -98,7 +100,7 @@ public class StatusBar : Widget
                 : _rightText;
 
             int rightX = X + Width - rightDisplay.Length;
-            screen.WriteText(rightX, Y, rightDisplay, _statusBarForeground, _statusBarBackground);
+            screen.WriteText(rightX, Y, rightDisplay, StatusBarForeground, StatusBarBackground);
         }
     }
 

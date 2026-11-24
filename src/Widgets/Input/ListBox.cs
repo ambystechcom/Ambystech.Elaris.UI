@@ -60,22 +60,46 @@ public class ListBox : Widget
     /// <summary>
     /// Gets or sets the background color for the selected item.
     /// </summary>
-    public Color SelectionBackgroundColor { get; set; }
+    public Color SelectionBackgroundColor
+    {
+        get => _selectionBackgroundColor ?? EffectiveTheme.Selection;
+        set => SetColor(ref _selectionBackgroundColor, value);
+    }
+
+    private Color? _selectionBackgroundColor;
 
     /// <summary>
     /// Gets or sets the foreground color for the selected item.
     /// </summary>
-    public Color SelectionForegroundColor { get; set; }
+    public Color SelectionForegroundColor
+    {
+        get => _selectionForegroundColor ?? EffectiveTheme.SelectionForeground;
+        set => SetColor(ref _selectionForegroundColor, value);
+    }
+
+    private Color? _selectionForegroundColor;
 
     /// <summary>
     /// Gets or sets the color of the scrollbar track.
     /// </summary>
-    public Color ScrollbarTrackColor { get; set; } = Color.Gray;
+    public Color ScrollbarTrackColor
+    {
+        get => _scrollbarTrackColor ?? EffectiveTheme.Border;
+        set => SetColor(ref _scrollbarTrackColor, value);
+    }
+
+    private Color? _scrollbarTrackColor;
 
     /// <summary>
     /// Gets or sets the color of the scrollbar thumb.
     /// </summary>
-    public Color ScrollbarThumbColor { get; set; } = Color.White;
+    public Color ScrollbarThumbColor
+    {
+        get => _scrollbarThumbColor ?? EffectiveTheme.Foreground;
+        set => SetColor(ref _scrollbarThumbColor, value);
+    }
+
+    private Color? _scrollbarThumbColor;
 
     /// <summary>
     /// Event raised when the selected index changes.
@@ -89,8 +113,6 @@ public class ListBox : Widget
 
     public ListBox()
     {
-        SelectionBackgroundColor = ColorHelper.FromRgb(50, 100, 150);
-        SelectionForegroundColor = Color.White;
     }
 
     /// <summary>

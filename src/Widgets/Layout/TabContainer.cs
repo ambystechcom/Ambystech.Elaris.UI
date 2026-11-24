@@ -54,11 +54,41 @@ public class TabContainer : Container
         set => _tabBarHeight = Math.Max(1, value);
     }
 
-    public Color ActiveTabBackgroundColor { get; set; } = ColorHelper.FromRgb(100, 150, 200);
-    public Color ActiveTabForegroundColor { get; set; } = Color.White;
-    public Color InactiveTabBackgroundColor { get; set; } = ColorHelper.FromRgb(60, 60, 60);
-    public Color InactiveTabForegroundColor { get; set; } = ColorHelper.FromRgb(200, 200, 200);
-    public Color TabBarBackgroundColor { get; set; } = ColorHelper.FromRgb(40, 40, 40);
+    public Color ActiveTabBackgroundColor
+    {
+        get => _activeTabBackgroundColor ?? EffectiveTheme.Accent;
+        set => SetColor(ref _activeTabBackgroundColor, value);
+    }
+
+    private Color? _activeTabBackgroundColor;
+    public Color ActiveTabForegroundColor
+    {
+        get => _activeTabForegroundColor ?? EffectiveTheme.AccentForeground;
+        set => SetColor(ref _activeTabForegroundColor, value);
+    }
+
+    private Color? _activeTabForegroundColor;
+    public Color InactiveTabBackgroundColor
+    {
+        get => _inactiveTabBackgroundColor ?? EffectiveTheme.Surface;
+        set => SetColor(ref _inactiveTabBackgroundColor, value);
+    }
+
+    private Color? _inactiveTabBackgroundColor;
+    public Color InactiveTabForegroundColor
+    {
+        get => _inactiveTabForegroundColor ?? EffectiveTheme.SurfaceForeground;
+        set => SetColor(ref _inactiveTabForegroundColor, value);
+    }
+
+    private Color? _inactiveTabForegroundColor;
+    public Color TabBarBackgroundColor
+    {
+        get => _tabBarBackgroundColor ?? EffectiveTheme.SurfaceAlt;
+        set => SetColor(ref _tabBarBackgroundColor, value);
+    }
+
+    private Color? _tabBarBackgroundColor;
 
     public event Action<Tab, Tab?, int, int>? TabChanged;
 

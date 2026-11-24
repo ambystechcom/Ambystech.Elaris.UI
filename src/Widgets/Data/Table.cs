@@ -20,12 +20,48 @@ public class Table : Widget
     public string EmptyStateMessage { get; set; } = "No data to display";
     public Widget? EmptyStateWidget { get; set; }
 
-    public Color HeaderForegroundColor { get; set; } = Color.White;
-    public Color HeaderBackgroundColor { get; set; } = ColorHelper.FromRgb(60, 60, 60);
-    public Color SelectedRowBackgroundColor { get; set; } = ColorHelper.FromRgb(0, 120, 212);
-    public Color SelectedRowForegroundColor { get; set; } = Color.White;
-    public Color GridLineColor { get; set; } = ColorHelper.FromRgb(80, 80, 80);
-    public Color EmptyStateForegroundColor { get; set; } = Color.Gray;
+    public Color HeaderForegroundColor
+    {
+        get => _headerForegroundColor ?? EffectiveTheme.SurfaceForeground;
+        set => SetColor(ref _headerForegroundColor, value);
+    }
+
+    private Color? _headerForegroundColor;
+    public Color HeaderBackgroundColor
+    {
+        get => _headerBackgroundColor ?? EffectiveTheme.Surface;
+        set => SetColor(ref _headerBackgroundColor, value);
+    }
+
+    private Color? _headerBackgroundColor;
+    public Color SelectedRowBackgroundColor
+    {
+        get => _selectedRowBackgroundColor ?? EffectiveTheme.Selection;
+        set => SetColor(ref _selectedRowBackgroundColor, value);
+    }
+
+    private Color? _selectedRowBackgroundColor;
+    public Color SelectedRowForegroundColor
+    {
+        get => _selectedRowForegroundColor ?? EffectiveTheme.SelectionForeground;
+        set => SetColor(ref _selectedRowForegroundColor, value);
+    }
+
+    private Color? _selectedRowForegroundColor;
+    public Color GridLineColor
+    {
+        get => _gridLineColor ?? EffectiveTheme.Border;
+        set => SetColor(ref _gridLineColor, value);
+    }
+
+    private Color? _gridLineColor;
+    public Color EmptyStateForegroundColor
+    {
+        get => _emptyStateForegroundColor ?? EffectiveTheme.MutedForeground;
+        set => SetColor(ref _emptyStateForegroundColor, value);
+    }
+
+    private Color? _emptyStateForegroundColor;
 
     public IEnumerable? DataSource
     {

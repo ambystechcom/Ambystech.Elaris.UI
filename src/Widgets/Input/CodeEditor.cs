@@ -37,9 +37,13 @@ public class CodeEditor : Editor
     }
 
     /// <summary>
-    /// Gets or sets the theme name for syntax highlighting colors.
+    /// Gets or sets the name of the syntax highlighting color scheme (see
+    /// <see cref="PluginManager.GetSupportedThemes"/>). Unknown names fall back to <c>"default"</c>.
     /// </summary>
-    public string Theme
+    /// <remarks>
+    /// Separate from <see cref="Widget.Theme"/>, which sets the widget's UI colors.
+    /// </remarks>
+    public string SyntaxThemeName
     {
         get => _theme;
         set
@@ -51,6 +55,21 @@ public class CodeEditor : Editor
                 _theme = "default";
             }
         }
+    }
+
+    /// <summary>
+    /// Gets or sets the name of the syntax highlighting color scheme.
+    /// </summary>
+    /// <remarks>
+    /// Obsolete: renamed to <see cref="SyntaxThemeName"/> because it hides <see cref="Widget.Theme"/>,
+    /// the UI color theme. While this alias exists, set a UI theme on a code editor's parent,
+    /// or cast to <see cref="Widget"/>.
+    /// </remarks>
+    [Obsolete("Use SyntaxThemeName. Theme now refers to the UI color theme (Widget.Theme).")]
+    public new string Theme
+    {
+        get => SyntaxThemeName;
+        set => SyntaxThemeName = value;
     }
 
     /// <summary>
@@ -489,7 +508,7 @@ public class CodeEditor : Editor
                 if (match.Value.Y < Lines.Count && match.Value.X < Lines[match.Value.Y].Length)
                 {
                     char bracketChar = Lines[match.Value.Y][match.Value.X];
-                    screen.SetCell(matchX, matchY, new Cell(bracketChar, Color.Yellow, BackgroundColor, bold: true));
+                    screen.SetCell(matchX, matchY, new Cell(bracketChar, EffectiveTheme.Warning, BackgroundColor, bold: true));
                 }
             }
         }

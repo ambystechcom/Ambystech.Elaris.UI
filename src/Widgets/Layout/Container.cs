@@ -73,7 +73,9 @@ public class Container : Widget
     protected override Rectangle? ChildClipRectangle
         => ClipChildren && Width > 0 && Height > 0 ? Bounds : null;
 
-    public Container() => BackgroundColor = Color.Transparent;
+    public Container()
+    {
+    }
 
     protected override void OnRender(Screen screen)
     {

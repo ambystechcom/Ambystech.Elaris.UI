@@ -15,17 +15,35 @@ internal class MenuDropdown : Widget
     /// <summary>
     /// Gets or sets the background color for selected dropdown items.
     /// </summary>
-    public Color SelectedBackgroundColor { get; set; } = ColorHelper.FromRgb(80, 80, 150);
+    public Color SelectedBackgroundColor
+    {
+        get => _selectedBackgroundColor ?? EffectiveTheme.Selection;
+        set => SetColor(ref _selectedBackgroundColor, value);
+    }
+
+    private Color? _selectedBackgroundColor;
 
     /// <summary>
     /// Gets or sets the foreground color for disabled dropdown items.
     /// </summary>
-    public Color DisabledForegroundColor { get; set; } = Color.Gray;
+    public Color DisabledForegroundColor
+    {
+        get => _disabledForegroundColor ?? EffectiveTheme.MutedForeground;
+        set => SetColor(ref _disabledForegroundColor, value);
+    }
+
+    private Color? _disabledForegroundColor;
 
     /// <summary>
     /// Gets or sets the border color for the dropdown.
     /// </summary>
-    public Color BorderColor { get; set; } = Color.Gray;
+    public Color BorderColor
+    {
+        get => _borderColor ?? EffectiveTheme.Border;
+        set => SetColor(ref _borderColor, value);
+    }
+
+    private Color? _borderColor;
 
     public MenuDropdown()
     {

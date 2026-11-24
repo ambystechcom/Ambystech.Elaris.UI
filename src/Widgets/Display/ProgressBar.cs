@@ -75,17 +75,35 @@ public class ProgressBar : Widget
     /// <summary>
     /// Gets or sets the color of the filled portion of the progress bar.
     /// </summary>
-    public Color FilledColor { get; set; }
+    public Color FilledColor
+    {
+        get => _filledColor ?? EffectiveTheme.Success;
+        set => SetColor(ref _filledColor, value);
+    }
+
+    private Color? _filledColor;
 
     /// <summary>
     /// Gets or sets the color of the unfilled portion of the progress bar.
     /// </summary>
-    public Color UnfilledColor { get; set; }
+    public Color UnfilledColor
+    {
+        get => _unfilledColor ?? EffectiveTheme.Track;
+        set => SetColor(ref _unfilledColor, value);
+    }
+
+    private Color? _unfilledColor;
 
     /// <summary>
     /// Gets or sets the text color for percentage display over filled portion.
     /// </summary>
-    public Color FilledTextColor { get; set; } = Color.White;
+    public Color FilledTextColor
+    {
+        get => _filledTextColor ?? EffectiveTheme.Foreground;
+        set => SetColor(ref _filledTextColor, value);
+    }
+
+    private Color? _filledTextColor;
 
     /// <summary>
     /// Gets or sets the vertical alignment of the percentage text.
@@ -112,8 +130,6 @@ public class ProgressBar : Widget
 
     public ProgressBar()
     {
-        FilledColor = Color.Green;
-        UnfilledColor = Color.DarkGray;
         Height = 1;
     }
 
