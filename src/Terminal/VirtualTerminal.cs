@@ -7,7 +7,7 @@ namespace Ambystech.Elaris.UI.Terminal;
 /// <summary>
 /// An in-memory <see cref="ITerminal"/> for tests. It decodes the ANSI escape sequences
 /// written to it into a grid of cells, and returns key presses queued with
-/// <see cref="EnqueueKey"/>. All members are thread-safe.
+/// <see cref="EnqueueKey(ConsoleKeyInfo)"/>. All members are thread-safe.
 /// </summary>
 /// <remarks>
 /// Supports the subset of ANSI that Elaris writes: cursor position (<c>CSI row;col H</c>),

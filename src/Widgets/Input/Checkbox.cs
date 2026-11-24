@@ -44,12 +44,24 @@ public class Checkbox : Widget
     /// <summary>
     /// Gets or sets the color of the checkbox brackets.
     /// </summary>
-    public Color BracketColor { get; set; } = Color.Yellow;
+    public Color BracketColor
+    {
+        get => _bracketColor ?? EffectiveTheme.Warning;
+        set => SetColor(ref _bracketColor, value);
+    }
+
+    private Color? _bracketColor;
 
     /// <summary>
     /// Gets or sets the color of the checkmark when checked.
     /// </summary>
-    public Color CheckmarkColor { get; set; } = Color.Green;
+    public Color CheckmarkColor
+    {
+        get => _checkmarkColor ?? EffectiveTheme.Success;
+        set => SetColor(ref _checkmarkColor, value);
+    }
+
+    private Color? _checkmarkColor;
 
     /// <summary>
     /// Gets whether this widget can receive keyboard focus.

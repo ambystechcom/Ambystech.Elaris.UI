@@ -25,27 +25,57 @@ public class Button : Widget
     /// <summary>
     /// Gets or sets the background color when button is pressed.
     /// </summary>
-    public Color PressedBackgroundColor { get; set; }
+    public Color PressedBackgroundColor
+    {
+        get => _pressedBackgroundColor ?? EffectiveTheme.SurfaceAlt;
+        set => SetColor(ref _pressedBackgroundColor, value);
+    }
+
+    private Color? _pressedBackgroundColor;
 
     /// <summary>
     /// Gets or sets the foreground color when button is pressed.
     /// </summary>
-    public Color PressedForegroundColor { get; set; }
+    public Color PressedForegroundColor
+    {
+        get => _pressedForegroundColor ?? EffectiveTheme.SurfaceForeground;
+        set => SetColor(ref _pressedForegroundColor, value);
+    }
+
+    private Color? _pressedForegroundColor;
 
     /// <summary>
     /// Gets or sets the background color when button has focus.
     /// </summary>
-    public Color FocusedBackgroundColor { get; set; }
+    public Color FocusedBackgroundColor
+    {
+        get => _focusedBackgroundColor ?? EffectiveTheme.Accent;
+        set => SetColor(ref _focusedBackgroundColor, value);
+    }
+
+    private Color? _focusedBackgroundColor;
 
     /// <summary>
     /// Gets or sets the foreground color when button has focus.
     /// </summary>
-    public Color FocusedForegroundColor { get; set; }
+    public Color FocusedForegroundColor
+    {
+        get => _focusedForegroundColor ?? EffectiveTheme.AccentForeground;
+        set => SetColor(ref _focusedForegroundColor, value);
+    }
+
+    private Color? _focusedForegroundColor;
 
     /// <summary>
     /// Gets or sets the border color. If not set, uses ForegroundColor.
     /// </summary>
-    public Color BorderColor { get; set; }
+    public Color BorderColor
+    {
+        get => _borderColor ?? EffectiveTheme.Border;
+        set => SetColor(ref _borderColor, value);
+    }
+
+    private Color? _borderColor;
 
     /// <summary>
     /// Gets or sets the button visual style.
@@ -92,15 +122,14 @@ public class Button : Widget
     /// </summary>
     public override bool IsFocusable => true;
 
+    /// <inheritdoc />
+    protected override Color DefaultBackgroundColor => EffectiveTheme.Surface;
+
+    /// <inheritdoc />
+    protected override Color DefaultForegroundColor => EffectiveTheme.SurfaceForeground;
+
     public Button()
     {
-        BackgroundColor = ColorHelper.FromRgb(70, 70, 70);
-        ForegroundColor = Color.White;
-        PressedBackgroundColor = ColorHelper.FromRgb(50, 50, 50);
-        PressedForegroundColor = Color.White;
-        FocusedBackgroundColor = ColorHelper.FromRgb(100, 150, 200);
-        FocusedForegroundColor = Color.White;
-        BorderColor = ColorHelper.FromRgb(150, 150, 150);
     }
 
     public Button(string text) : this()

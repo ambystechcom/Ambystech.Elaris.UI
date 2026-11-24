@@ -20,13 +20,20 @@ public abstract class Widget
     private Widget? _parent;
     private readonly List<Widget> _children = [];
     private int _zIndex = 0;
-    private Color _foregroundColor = Color.White;
-    private Color _backgroundColor = Color.Transparent;
+    private Color? _foregroundColor;
+    private Color? _backgroundColor;
+    private Theme? _theme;
 
     /// <summary>
     /// Set on the root widget by <see cref="Application"/>; called by <see cref="Invalidate"/>.
     /// </summary>
     internal Action? RenderRequested { get; set; }
+
+    /// <summary>
+    /// For widgets drawn by another widget without being its child (such as a popup list),
+    /// the owner whose theme they use.
+    /// </summary>
+    internal Widget? LogicalParent { get; set; }
 
     /// <summary>
     /// Gets or sets the bounds of this widget.
@@ -132,33 +139,81 @@ public abstract class Widget
     /// <summary>
     /// Gets or sets the foreground color.
     /// </summary>
+    /// <remarks>Defaults to <see cref="DefaultForegroundColor"/>, which comes from the theme.</remarks>
     public Color ForegroundColor
     {
-        get => _foregroundColor;
+        get => _foregroundColor ?? DefaultForegroundColor;
+        set => SetColor(ref _foregroundColor, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the background color.
+    /// </summary>
+    /// <remarks>Defaults to <see cref="DefaultBackgroundColor"/>, which comes from the theme.</remarks>
+    public Color BackgroundColor
+    {
+        get => _backgroundColor ?? DefaultBackgroundColor;
+        set => SetColor(ref _backgroundColor, value);
+    }
+
+    /// <summary>
+    /// The foreground color used when <see cref="ForegroundColor"/> is not set.
+    /// Defaults to the theme's <see cref="UI.Theme.Foreground"/>.
+    /// </summary>
+    protected virtual Color DefaultForegroundColor => EffectiveTheme.Foreground;
+
+    /// <summary>
+    /// The background color used when <see cref="BackgroundColor"/> is not set.
+    /// Defaults to transparent, so the widget shows what is behind it.
+    /// </summary>
+    protected virtual Color DefaultBackgroundColor => Color.Transparent;
+
+    /// <summary>
+    /// Gets or sets the theme for this widget and its children. When <c>null</c> (the default),
+    /// the parent's theme is used. See <see cref="EffectiveTheme"/>.
+    /// </summary>
+    public Theme? Theme
+    {
+        get => _theme;
         set
         {
-            if (_foregroundColor != value)
+            if (_theme != value)
             {
-                _foregroundColor = value;
+                _theme = value;
                 Invalidate();
             }
         }
     }
 
     /// <summary>
-    /// Gets or sets the background color.
+    /// Gets the theme in effect: this widget's <see cref="Theme"/>, else the nearest ancestor's,
+    /// else <see cref="UI.Theme.Dark"/>.
     /// </summary>
-    public Color BackgroundColor
+    public Theme EffectiveTheme
     {
-        get => _backgroundColor;
-        set
+        get
         {
-            if (_backgroundColor != value)
+            for (var widget = this; widget != null; widget = widget._parent ?? widget.LogicalParent)
             {
-                _backgroundColor = value;
-                Invalidate();
+                if (widget._theme != null)
+                    return widget._theme;
             }
+
+            return UI.Theme.Dark;
         }
+    }
+
+    /// <summary>
+    /// Sets an optional color field and asks for a redraw if it changed. Use it in the setters
+    /// of themed color properties: <c>get => _color ?? EffectiveTheme.Accent; set => SetColor(ref _color, value);</c>
+    /// </summary>
+    protected void SetColor(ref Color? field, Color value)
+    {
+        if (field is { } current && current.ToArgb() == value.ToArgb() && current.A == value.A)
+            return;
+
+        field = value;
+        Invalidate();
     }
 
     /// <summary>

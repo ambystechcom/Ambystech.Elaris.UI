@@ -29,37 +29,79 @@ public class MenuBar : Widget
     /// <summary>
     /// Gets or sets the background color for selected menu items.
     /// </summary>
-    public Color SelectedBackgroundColor { get; set; } = ColorHelper.FromRgb(100, 100, 100);
+    public Color SelectedBackgroundColor
+    {
+        get => _selectedBackgroundColor ?? EffectiveTheme.Selection;
+        set => SetColor(ref _selectedBackgroundColor, value);
+    }
+
+    private Color? _selectedBackgroundColor;
 
     /// <summary>
     /// Gets or sets the foreground color for selected menu items.
     /// </summary>
-    public Color SelectedForegroundColor { get; set; } = Color.White;
+    public Color SelectedForegroundColor
+    {
+        get => _selectedForegroundColor ?? EffectiveTheme.SelectionForeground;
+        set => SetColor(ref _selectedForegroundColor, value);
+    }
+
+    private Color? _selectedForegroundColor;
 
     /// <summary>
     /// Gets or sets the background color for dropdown menus.
     /// </summary>
-    public Color DropdownBackgroundColor { get; set; } = ColorHelper.FromRgb(40, 40, 40);
+    public Color DropdownBackgroundColor
+    {
+        get => _dropdownBackgroundColor ?? EffectiveTheme.SurfaceAlt;
+        set => SetColor(ref _dropdownBackgroundColor, value);
+    }
+
+    private Color? _dropdownBackgroundColor;
 
     /// <summary>
     /// Gets or sets the foreground color for dropdown menu items.
     /// </summary>
-    public Color DropdownForegroundColor { get; set; } = Color.White;
+    public Color DropdownForegroundColor
+    {
+        get => _dropdownForegroundColor ?? EffectiveTheme.Foreground;
+        set => SetColor(ref _dropdownForegroundColor, value);
+    }
+
+    private Color? _dropdownForegroundColor;
 
     /// <summary>
     /// Gets or sets the background color for selected dropdown items.
     /// </summary>
-    public Color DropdownSelectedBackgroundColor { get; set; } = ColorHelper.FromRgb(80, 80, 150);
+    public Color DropdownSelectedBackgroundColor
+    {
+        get => _dropdownSelectedBackgroundColor ?? EffectiveTheme.Selection;
+        set => SetColor(ref _dropdownSelectedBackgroundColor, value);
+    }
+
+    private Color? _dropdownSelectedBackgroundColor;
 
     /// <summary>
     /// Gets or sets the foreground color for disabled dropdown items.
     /// </summary>
-    public Color DropdownDisabledForegroundColor { get; set; } = Color.Gray;
+    public Color DropdownDisabledForegroundColor
+    {
+        get => _dropdownDisabledForegroundColor ?? EffectiveTheme.MutedForeground;
+        set => SetColor(ref _dropdownDisabledForegroundColor, value);
+    }
+
+    private Color? _dropdownDisabledForegroundColor;
 
     /// <summary>
     /// Gets or sets the border color for dropdown menus.
     /// </summary>
-    public Color DropdownBorderColor { get; set; } = Color.Gray;
+    public Color DropdownBorderColor
+    {
+        get => _dropdownBorderColor ?? EffectiveTheme.Border;
+        set => SetColor(ref _dropdownBorderColor, value);
+    }
+
+    private Color? _dropdownBorderColor;
 
     /// <summary>
     /// Gets whether this widget can receive keyboard focus.

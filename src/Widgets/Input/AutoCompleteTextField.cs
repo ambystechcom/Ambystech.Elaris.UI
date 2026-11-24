@@ -39,27 +39,33 @@ public class AutoCompleteTextField : TextField
     /// </summary>
     public Color SuggestionBackgroundColor
     {
-        get => _listBox.BackgroundColor;
-        set => _listBox.BackgroundColor = value;
+        get => _suggestionBackgroundColor ?? EffectiveTheme.SurfaceAlt;
+        set => SetColor(ref _suggestionBackgroundColor, value);
     }
+
+    private Color? _suggestionBackgroundColor;
 
     /// <summary>
     /// Gets or sets the foreground color for suggestions.
     /// </summary>
     public Color SuggestionForegroundColor
     {
-        get => _listBox.ForegroundColor;
-        set => _listBox.ForegroundColor = value;
+        get => _suggestionForegroundColor ?? EffectiveTheme.Foreground;
+        set => SetColor(ref _suggestionForegroundColor, value);
     }
+
+    private Color? _suggestionForegroundColor;
 
     /// <summary>
     /// Gets or sets the highlight color for the selected suggestion.
     /// </summary>
     public Color SelectionHighlightColor
     {
-        get => _listBox.SelectionBackgroundColor;
-        set => _listBox.SelectionBackgroundColor = value;
+        get => _selectionHighlightColor ?? EffectiveTheme.Selection;
+        set => SetColor(ref _selectionHighlightColor, value);
     }
+
+    private Color? _selectionHighlightColor;
 
     /// <summary>
     /// Event raised when a suggestion is selected.
@@ -82,11 +88,8 @@ public class AutoCompleteTextField : TextField
         {
             Visible = false,
             ZIndex = 1000, // Ensure popup renders on top
-            BackgroundColor = ColorHelper.FromRgb(30, 30, 30),
-            ForegroundColor = Color.White,
-            SelectionBackgroundColor = ColorHelper.FromRgb(50, 100, 150),
-            SelectionForegroundColor = Color.White
         };
+        _listBox.LogicalParent = this;
 
         TextChanged += OnTextChangedInternal;
     }
@@ -97,11 +100,8 @@ public class AutoCompleteTextField : TextField
         {
             Visible = false,
             ZIndex = 1000,
-            BackgroundColor = ColorHelper.FromRgb(30, 30, 30),
-            ForegroundColor = Color.White,
-            SelectionBackgroundColor = ColorHelper.FromRgb(50, 100, 150),
-            SelectionForegroundColor = Color.White
         };
+        _listBox.LogicalParent = this;
 
         TextChanged += OnTextChangedInternal;
     }
@@ -263,6 +263,10 @@ public class AutoCompleteTextField : TextField
             }
 
             _listBox.Bounds = new Rectangle(popupX, popupY, popupWidth, popupHeight);
+
+            _listBox.BackgroundColor = SuggestionBackgroundColor;
+            _listBox.ForegroundColor = SuggestionForegroundColor;
+            _listBox.SelectionBackgroundColor = SelectionHighlightColor;
 
             // The popup may extend past the container the field is in.
             using (screen.PushOverlay())

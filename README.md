@@ -79,6 +79,37 @@ Elaris.UI is designed to work seamlessly across Windows, macOS, and Linux termin
 #### iTerm2 (macOS)
 ![iTerm2](assets/iterm2.png)
 
+## Themes
+
+Widgets take their colors from a theme unless you set them yourself. Pick one of the built-in themes, or derive your own:
+
+```csharp
+var app = new Application { Theme = Theme.Light };   // Theme.Dark (default), Theme.Light, Theme.HighContrast
+
+// Derive a custom theme
+app.Theme = Theme.Dark with { Accent = Color.Orange, Selection = Color.DarkOrange };
+
+// Theme one part of the screen
+sidebar.Theme = Theme.HighContrast;                   // applies to sidebar and its children
+```
+
+Themes can be switched while the app runs. A color set directly on a widget (`button.BackgroundColor = ...`) always wins over the theme. A theme defines these roles:
+
+| Role | Used for |
+|---|---|
+| `Foreground`, `Background` | Default text; screen background (transparent = terminal's own) |
+| `MutedForeground` | Placeholders, line numbers, tree connectors, disabled items |
+| `Border` | Button and menu borders, table grid lines, scrollbar tracks |
+| `Accent`, `AccentForeground` | Focused button, active tab |
+| `Selection`, `SelectionForeground` | Selected item in lists, trees, tables, menus, suggestions |
+| `Surface`, `SurfaceForeground` | Buttons, table headers, inactive tabs |
+| `SurfaceAlt` | Dropdowns, suggestion lists, tab bar, pressed buttons |
+| `InputBackground` | Editor and code editor |
+| `Track` | Progress bar track, status bar |
+| `Success`, `Warning` | Progress fill and checkmarks; checkbox brackets and bracket matching |
+
+Widgets draw with a transparent background by default, which keeps whatever is underneath, so text on a colored panel or a light theme's background shows no holes. See `examples/Elaris.Examples.ThemesDemo` for a live theme switcher.
+
 ## Layout and Clipping
 
 Widget positions (`X`, `Y`) are absolute screen coordinates. To keep children inside a frame that is itself positioned by a layout, let the frame lay them out (`Frame` is a `Container`):

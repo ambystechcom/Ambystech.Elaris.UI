@@ -95,6 +95,24 @@ public partial class Application
     public Widget? FocusedWidget => _focusedWidget;
 
     /// <summary>
+    /// Gets or sets the theme for the whole application. Applied to the root widget; can be
+    /// changed while the application runs. When <c>null</c>, widgets use their own
+    /// <see cref="Widget.Theme"/> or <see cref="UI.Theme.Dark"/>.
+    /// </summary>
+    public Theme? Theme
+    {
+        get => _theme;
+        set
+        {
+            _theme = value;
+            if (_rootWidget != null && value != null)
+                _rootWidget.Theme = value;
+        }
+    }
+
+    private Theme? _theme;
+
+    /// <summary>
     /// Gets or sets whether to redraw every frame, even when nothing asked for a redraw.
     /// Defaults to <c>false</c>: the screen is redrawn after input, queued actions, resizes and
     /// <see cref="Widget.Invalidate"/>. Turn this on for code that changes widgets from other
@@ -197,6 +215,8 @@ public partial class Application
     {
         _rootWidget = rootWidget;
         _rootWidget.RenderRequested = RequestRender;
+        if (_theme != null)
+            _rootWidget.Theme = _theme;
         _rootWidget.Bounds = bounds;
 
         var focusable = GetFocusableWidgets();
@@ -271,6 +291,13 @@ public partial class Application
         try
         {
             _screen.Clear();
+
+            var theme = _rootWidget.EffectiveTheme;
+            if (theme.Background.A > 0)
+            {
+                _screen.FillRectangle(new Rectangle(0, 0, _screen.Width, _screen.Height), ' ', theme.Foreground, theme.Background);
+            }
+
             _rootWidget.Render(_screen);
             _screen.Render();
             RenderCount++;

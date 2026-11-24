@@ -41,7 +41,7 @@ After initialization, any `CodeEditor` instance can reference the new languages 
 var codeEditor = new CodeEditor
 {
     Language = "rust",    // loaded from plugins/syntax/rust.json
-    Theme = "monokai"     // loaded from plugins/themes/monokai.json
+    SyntaxThemeName = "monokai"   // loaded from plugins/themes/monokai.json
 };
 ```
 
@@ -110,7 +110,7 @@ Each theme file maps token types to 24-bit RGB colors.
 
 | Field         | Type            | Description                                                                         |
 | ------------- | --------------- | ----------------------------------------------------------------------------------- |
-| `name`        | string          | The identifier used in `CodeEditor.Theme`.                                          |
+| `name`        | string          | The identifier used in `CodeEditor.SyntaxThemeName`.                                 |
 | `displayName` | string          | Human-readable label (used by tools and demos).                                     |
 | `colors`      | object          | Token-type name → `{ r, g, b }` color. Unmapped token types fall back to the widget's `ForegroundColor`. |
 

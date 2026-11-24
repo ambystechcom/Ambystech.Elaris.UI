@@ -68,7 +68,7 @@ Create JSON files for each theme:
 var codeEditor = new CodeEditor
 {
     Language = "rust",  // Uses plugin-provided rules
-    Theme = "monokai"   // Uses plugin-provided theme
+    SyntaxThemeName = "monokai"   // Uses plugin-provided theme
 };
 ```
 

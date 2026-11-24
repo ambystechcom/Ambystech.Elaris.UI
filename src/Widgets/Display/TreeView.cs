@@ -81,17 +81,35 @@ public class TreeView : Widget
     /// <summary>
     /// Gets or sets the background color for the selected node.
     /// </summary>
-    public Color SelectionBackgroundColor { get; set; }
+    public Color SelectionBackgroundColor
+    {
+        get => _selectionBackgroundColor ?? EffectiveTheme.Selection;
+        set => SetColor(ref _selectionBackgroundColor, value);
+    }
+
+    private Color? _selectionBackgroundColor;
 
     /// <summary>
     /// Gets or sets the foreground color for the selected node.
     /// </summary>
-    public Color SelectionForegroundColor { get; set; }
+    public Color SelectionForegroundColor
+    {
+        get => _selectionForegroundColor ?? EffectiveTheme.SelectionForeground;
+        set => SetColor(ref _selectionForegroundColor, value);
+    }
+
+    private Color? _selectionForegroundColor;
 
     /// <summary>
     /// Gets or sets the color for tree connectors.
     /// </summary>
-    public Color ConnectorColor { get; set; } = Color.Gray;
+    public Color ConnectorColor
+    {
+        get => _connectorColor ?? EffectiveTheme.MutedForeground;
+        set => SetColor(ref _connectorColor, value);
+    }
+
+    private Color? _connectorColor;
 
     /// <summary>
     /// Gets or sets the expand/collapse indicator character for expanded nodes.
@@ -130,8 +148,6 @@ public class TreeView : Widget
 
     public TreeView()
     {
-        SelectionBackgroundColor = ColorHelper.FromRgb(50, 100, 150);
-        SelectionForegroundColor = Color.White;
     }
 
     protected override void OnRender(Screen screen)

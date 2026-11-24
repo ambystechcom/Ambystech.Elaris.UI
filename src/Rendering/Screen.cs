@@ -11,6 +11,10 @@ namespace Ambystech.Elaris.UI.Rendering;
 /// Widgets draw into the back buffer. <see cref="Render"/> compares it with what is
 /// already on the terminal and writes only the cells that changed, moving the cursor
 /// and changing colors only when needed.
+/// <para>
+/// Drawing with a transparent background (alpha 0) keeps the background that is already
+/// in the buffer; cells that were never filled show the terminal's own background.
+/// </para>
 /// </remarks>
 public class Screen
 {
@@ -103,6 +107,17 @@ public class Screen
     }
 
     private Rectangle FullScreen => new(0, 0, Width, Height);
+
+    /// <summary>
+    /// A cell with a transparent background keeps the background already at that position,
+    /// so text drawn on a colored panel doesn't cut holes in it.
+    /// </summary>
+    private Cell Composite(int x, int y, Cell cell)
+    {
+        if (cell.Background.A == 0)
+            cell.Background = _backBuffer[y, x].Background;
+        return cell;
+    }
 
     private bool IsInClip(int x, int y)
         => x >= _clip.Left && x < _clip.Right && y >= _clip.Top && y < _clip.Bottom;
@@ -225,7 +240,7 @@ public class Screen
         lock (_lock)
         {
             if (IsInClip(x, y))
-                _backBuffer[y, x] = cell;
+                _backBuffer[y, x] = Composite(x, y, cell);
         }
     }
 
@@ -251,7 +266,7 @@ public class Screen
 
                 if (IsInClip(posX, y))
                 {
-                    _backBuffer[y, posX] = new Cell(text[i], foreground, background, bold, italic, underline);
+                    _backBuffer[y, posX] = Composite(posX, y, new Cell(text[i], foreground, background, bold, italic, underline));
                 }
             }
         }
@@ -299,7 +314,7 @@ public class Screen
             void Put(int x, int y, char c)
             {
                 if (IsInClip(x, y))
-                    _backBuffer[y, x] = new Cell(c, foreground, background);
+                    _backBuffer[y, x] = Composite(x, y, new Cell(c, foreground, background));
             }
 
             int right = rect.Right - 1;

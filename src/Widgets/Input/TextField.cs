@@ -12,7 +12,7 @@ public class TextField : Widget
     private string _text = string.Empty;
     private int _cursorPosition = 0;
     private string _placeholder = string.Empty;
-    private Color _placeholderColor;
+    private Color? _placeholderColor;
 
     /// <summary>
     /// Gets or sets the text content.
@@ -41,8 +41,8 @@ public class TextField : Widget
     /// </summary>
     public Color PlaceholderColor
     {
-        get => _placeholderColor.A == 0 ? Color.Gray : _placeholderColor;
-        set => _placeholderColor = value;
+        get => _placeholderColor ?? EffectiveTheme.MutedForeground;
+        set => SetColor(ref _placeholderColor, value);
     }
 
     /// <summary>
