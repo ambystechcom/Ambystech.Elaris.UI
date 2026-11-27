@@ -2,6 +2,7 @@ using System.Drawing;
 using System.Text;
 using Ambystech.Elaris.UI.Core;
 using Ambystech.Elaris.UI.Rendering;
+using Ambystech.Elaris.UI.Input;
 
 namespace Ambystech.Elaris.UI.Widgets.Input;
 
@@ -447,6 +448,40 @@ public class Editor : Widget
     {
         base.OnBlur();
         ClearSelection();
+    }
+
+    /// <summary>
+    /// Left click moves the cursor (clearing the selection); the wheel scrolls three lines.
+    /// </summary>
+    protected internal override bool OnMouse(MouseEvent e)
+    {
+        if (e.IsLeftPress)
+        {
+            int lineNumberWidth = _showLineNumbers ? GetLineNumberWidth() + 1 : 0;
+            int line = Math.Clamp(_scrollOffsetY + (e.Y - Y), 0, _lines.Count - 1);
+            int column = Math.Clamp(_scrollOffsetX + (e.X - X - lineNumberWidth), 0, _lines[line].Length);
+
+            ClearSelection();
+            MoveCursor(line, column);
+            Invalidate();
+            return true;
+        }
+
+        if (e.Kind == MouseEventKind.WheelUp)
+        {
+            ScrollUp(3);
+            Invalidate();
+            return true;
+        }
+
+        if (e.Kind == MouseEventKind.WheelDown)
+        {
+            ScrollDown(3);
+            Invalidate();
+            return true;
+        }
+
+        return base.OnMouse(e);
     }
 
     protected internal override bool OnKeyPress(ConsoleKeyInfo key)

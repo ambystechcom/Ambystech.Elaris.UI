@@ -1,5 +1,6 @@
 using System.Drawing;
 using Ambystech.Elaris.UI.Rendering;
+using Ambystech.Elaris.UI.Input;
 
 namespace Ambystech.Elaris.UI.Widgets.Input;
 
@@ -122,6 +123,20 @@ public class Checkbox : Widget
     protected internal override void OnBlur()
     {
         base.OnBlur();
+    }
+
+    /// <summary>
+    /// Left click toggles the checkbox.
+    /// </summary>
+    protected internal override bool OnMouse(MouseEvent e)
+    {
+        if (e.IsLeftPress)
+        {
+            Toggle();
+            return true;
+        }
+
+        return base.OnMouse(e);
     }
 
     protected internal override bool OnKeyPress(ConsoleKeyInfo key)

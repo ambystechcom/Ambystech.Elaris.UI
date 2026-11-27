@@ -68,6 +68,25 @@ app.Run(frame);
 
 The terminal is restored on exit, including on Ctrl+C, process termination and unhandled exceptions.
 
+### Mouse
+
+On macOS and Linux, the mouse works out of the box:
+
+| Widget | Mouse |
+|---|---|
+| Any focusable widget | Left click focuses it |
+| `Button` | Click (press and release over the button) raises `Click` |
+| `Checkbox` | Click toggles |
+| `TextField`, `Editor` | Click moves the cursor; the wheel scrolls the editor |
+| `ListBox`, `TreeView`, `Table` | Click selects; double click activates (`ItemActivated`, Enter on a tree node, `RowActivated`); the wheel moves the selection |
+| `TextView` | The wheel scrolls |
+| `TabContainer` | Click a tab title to switch tabs |
+| `MenuBar` | Click a title to open or close its menu, click an item to choose it |
+| `AutoCompleteTextField` | Click a suggestion to accept it |
+| `Panel` | Click the header to collapse or expand |
+
+Set `app.MouseEnabled = false` to turn it off. While mouse reporting is on, most terminals select text only with Shift held down. Custom widgets override `OnMouse(MouseEvent e)` (or `OnMouseClick`); unhandled events go to the parent. On Windows, .NET doesn't deliver mouse events to console apps, so the mouse isn't supported there yet.
+
 ### Cross Platform Compatibility
 
 Elaris.UI is designed to work seamlessly across Windows, macOS, and Linux terminals that support ANSI escape codes. Ensure your terminal supports truecolor for the best experience.

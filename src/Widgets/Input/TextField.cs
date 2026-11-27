@@ -1,6 +1,7 @@
 using System.Drawing;
 using Ambystech.Elaris.UI.Core;
 using Ambystech.Elaris.UI.Rendering;
+using Ambystech.Elaris.UI.Input;
 
 namespace Ambystech.Elaris.UI.Widgets.Input;
 
@@ -142,6 +143,21 @@ public class TextField : Widget
     {
         base.OnBlur();
         Blurred?.Invoke();
+    }
+
+    /// <summary>
+    /// Left click moves the cursor to the clicked column.
+    /// </summary>
+    protected internal override bool OnMouse(MouseEvent e)
+    {
+        if (e.IsLeftPress)
+        {
+            _cursorPosition = Math.Clamp(e.X - X, 0, _text.Length);
+            Invalidate();
+            return true;
+        }
+
+        return base.OnMouse(e);
     }
 
     protected internal override bool OnKeyPress(ConsoleKeyInfo key)

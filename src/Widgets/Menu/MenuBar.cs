@@ -1,6 +1,7 @@
 using System.Drawing;
 using Ambystech.Elaris.UI.Core;
 using Ambystech.Elaris.UI.Rendering;
+using Ambystech.Elaris.UI.Input;
 
 namespace Ambystech.Elaris.UI.Widgets.Menu;
 
@@ -194,7 +195,8 @@ public class MenuBar : Widget
             ForegroundColor = DropdownForegroundColor,
             SelectedBackgroundColor = DropdownSelectedBackgroundColor,
             DisabledForegroundColor = DropdownDisabledForegroundColor,
-            BorderColor = DropdownBorderColor
+            BorderColor = DropdownBorderColor,
+            ItemClicked = ActivateSubItem,
         };
 
         var root = GetRootWidget();
@@ -233,6 +235,91 @@ public class MenuBar : Widget
         if (_activeDropdown != null)
         {
             _activeDropdown.ActiveSubItemIndex = _activeSubItemIndex;
+        }
+    }
+
+    /// <summary>
+    /// Left click on a menu title opens its dropdown (or closes it if already open), or
+    /// invokes an item that has no submenu.
+    /// </summary>
+    protected internal override bool OnMouse(MouseEvent e)
+    {
+        if (e.IsLeftPress && e.Y == Y)
+        {
+            // Same layout as OnRender.
+            int currentX = X + 1;
+            for (int i = 0; i < _items.Count; i++)
+            {
+                int itemWidth = _items[i].Text.Length + 2;
+                if (e.X >= currentX && e.X < currentX + itemWidth)
+                {
+                    OpenOrInvoke(i);
+                    return true;
+                }
+
+                currentX += itemWidth + 1;
+            }
+
+            return true;
+        }
+
+        return base.OnMouse(e);
+    }
+
+    private void OpenOrInvoke(int index)
+    {
+        var item = _items[index];
+
+        if (_menuOpen && _activeMenuIndex == index)
+        {
+            CloseMenu();
+            return;
+        }
+
+        _selectedIndex = index;
+
+        if (item.HasSubmenu)
+        {
+            _menuOpen = true;
+            _activeMenuIndex = index;
+            _activeSubItemIndex = 0;
+            ShowDropdown(index);
+        }
+        else
+        {
+            CloseMenu();
+            item.Invoke();
+            ItemSelected?.Invoke(item);
+        }
+
+        Invalidate();
+    }
+
+    private void CloseMenu()
+    {
+        _menuOpen = false;
+        _activeMenuIndex = -1;
+        HideDropdown();
+    }
+
+    /// <summary>
+    /// Invokes a dropdown item (Enter in an open menu, or a click on the item) and closes the menu.
+    /// </summary>
+    private void ActivateSubItem(int subIndex)
+    {
+        if (_activeMenuIndex < 0)
+            return;
+
+        var subItems = _items[_activeMenuIndex].SubItems;
+        if (subIndex < 0 || subIndex >= subItems.Count)
+            return;
+
+        var selectedItem = subItems[subIndex];
+        if (selectedItem.Enabled && !selectedItem.IsSeparator)
+        {
+            selectedItem.Invoke();
+            ItemSelected?.Invoke(selectedItem);
+            CloseMenu();
         }
     }
 
@@ -328,15 +415,7 @@ public class MenuBar : Widget
 
                 case ConsoleKey.Enter:
                 case ConsoleKey.Spacebar:
-                    var selectedItem = activeMenu.SubItems[_activeSubItemIndex];
-                    if (selectedItem.Enabled && !selectedItem.IsSeparator)
-                    {
-                        selectedItem.Invoke();
-                        ItemSelected?.Invoke(selectedItem);
-                        _menuOpen = false;
-                        _activeMenuIndex = -1;
-                        HideDropdown();
-                    }
+                    ActivateSubItem(_activeSubItemIndex);
                     return true;
 
                 case ConsoleKey.Escape:

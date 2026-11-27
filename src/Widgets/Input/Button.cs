@@ -2,6 +2,7 @@ using System.Drawing;
 using Ambystech.Elaris.UI.Core;
 using Ambystech.Elaris.UI.Enums;
 using Ambystech.Elaris.UI.Rendering;
+using Ambystech.Elaris.UI.Input;
 
 namespace Ambystech.Elaris.UI.Widgets.Input;
 
@@ -375,6 +376,35 @@ public class Button : Widget
     {
         base.OnBlur();
         _isPressed = false;
+    }
+
+    /// <summary>
+    /// Left press shows the button pressed; releasing over the button raises <see cref="Click"/>.
+    /// </summary>
+    protected internal override bool OnMouse(MouseEvent e)
+    {
+        if (e.IsLeftPress)
+        {
+            _isPressed = true;
+            Pressed?.Invoke();
+            Invalidate();
+            return true;
+        }
+
+        if (e.IsLeftRelease && _isPressed)
+        {
+            _isPressed = false;
+            Released?.Invoke();
+            if (Bounds.Contains(e.Position))
+                Click?.Invoke();
+            Invalidate();
+            return true;
+        }
+
+        if (e.Kind == MouseEventKind.Drag && _isPressed)
+            return true;
+
+        return base.OnMouse(e);
     }
 
     protected internal override bool OnKeyPress(ConsoleKeyInfo key)

@@ -1,6 +1,7 @@
 using System.Drawing;
 using Ambystech.Elaris.UI.Core;
 using Ambystech.Elaris.UI.Rendering;
+using Ambystech.Elaris.UI.Input;
 
 namespace Ambystech.Elaris.UI.Widgets.Display;
 
@@ -329,6 +330,28 @@ public class TreeView : Widget
     protected internal override void OnBlur()
     {
         base.OnBlur();
+    }
+
+    /// <summary>
+    /// Left click selects a node; double click acts like Enter (activates and expands or
+    /// collapses it). The wheel moves the selection.
+    /// </summary>
+    protected internal override bool OnMouse(MouseEvent e)
+    {
+        if (e.IsLeftPress)
+        {
+            var visibleNodes = GetVisibleNodes();
+            int index = _scrollOffset + (e.Y - Y);
+            if (e.Y >= Y && e.Y < Y + Height && index >= 0 && index < visibleNodes.Count)
+            {
+                SelectedNode = visibleNodes[index].node;
+                if (e.ClickCount == 2)
+                    OnKeyPress(new ConsoleKeyInfo('\r', ConsoleKey.Enter, false, false, false));
+            }
+            return true;
+        }
+
+        return ScrollWithArrowKeys(e) || base.OnMouse(e);
     }
 
     protected internal override bool OnKeyPress(ConsoleKeyInfo key)

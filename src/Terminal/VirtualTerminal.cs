@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Text;
+using Ambystech.Elaris.UI.Input;
 using Ambystech.Elaris.UI.Rendering;
 
 namespace Ambystech.Elaris.UI.Terminal;
@@ -23,7 +24,7 @@ public sealed class VirtualTerminal : ITerminal
     private static readonly Color DefaultBackground = Color.Transparent;
 
     private readonly object _lock = new();
-    private readonly Queue<ConsoleKeyInfo> _keys = new();
+    private readonly Queue<TerminalInput> _inputs = new();
     private readonly StringBuilder _pending = new();
     private readonly StringBuilder _output = new();
     private Cell[,] _main;
@@ -39,6 +40,7 @@ public sealed class VirtualTerminal : ITerminal
     private bool _underline;
     private bool _isAlternateScreen;
     private bool _isCursorVisible = true;
+    private readonly HashSet<int> _mouseModes = [];
     private bool _isInitialized;
     private bool _treatControlCAsInput;
     private int _flushCount;
@@ -81,6 +83,23 @@ public sealed class VirtualTerminal : ITerminal
     public bool IsCursorVisible { get { lock (_lock) return _isCursorVisible; } }
 
     /// <summary>
+    /// Gets whether mouse reporting is on: button tracking (<c>?1000</c>) with SGR encoding (<c>?1006</c>).
+    /// </summary>
+    public bool IsMouseReportingEnabled
+    {
+        get
+        {
+            lock (_lock)
+                return _mouseModes.Contains(1000) && _mouseModes.Contains(1006);
+        }
+    }
+
+    /// <summary>
+    /// Always <c>true</c>: queue mouse events with <see cref="EnqueueMouse"/>.
+    /// </summary>
+    public bool SupportsMouse => true;
+
+    /// <summary>
     /// Gets whether <see cref="Initialize"/> has been called without a matching <see cref="Restore"/>.
     /// </summary>
     public bool IsInitialized { get { lock (_lock) return _isInitialized; } }
@@ -115,7 +134,25 @@ public sealed class VirtualTerminal : ITerminal
     public void EnqueueKey(ConsoleKeyInfo key)
     {
         lock (_lock)
-            _keys.Enqueue(key);
+            _inputs.Enqueue(TerminalInput.FromKey(key));
+    }
+
+    /// <summary>
+    /// Queues a mouse event to be returned by <see cref="TryReadInput"/>.
+    /// </summary>
+    public void EnqueueMouse(MouseEvent mouse)
+    {
+        lock (_lock)
+            _inputs.Enqueue(TerminalInput.FromMouse(mouse));
+    }
+
+    /// <summary>
+    /// Queues a left-button press and release at the given position.
+    /// </summary>
+    public void EnqueueClick(int x, int y)
+    {
+        EnqueueMouse(new MouseEvent(x, y, MouseButton.Left, MouseEventKind.Press));
+        EnqueueMouse(new MouseEvent(x, y, MouseButton.Left, MouseEventKind.Release));
     }
 
     /// <summary>
@@ -238,10 +275,30 @@ public sealed class VirtualTerminal : ITerminal
     }
 
     /// <inheritdoc />
+    /// <remarks>Mouse events queued before the next key are skipped.</remarks>
     public bool TryReadKey(out ConsoleKeyInfo key)
     {
         lock (_lock)
-            return _keys.TryDequeue(out key);
+        {
+            while (_inputs.TryDequeue(out var input))
+            {
+                if (!input.IsMouse)
+                {
+                    key = input.Key;
+                    return true;
+                }
+            }
+
+            key = default;
+            return false;
+        }
+    }
+
+    /// <inheritdoc />
+    public bool TryReadInput(out TerminalInput input)
+    {
+        lock (_lock)
+            return _inputs.TryDequeue(out input);
     }
 
     private Cell[,] ActiveGrid => _isAlternateScreen ? _alternate : _main;
@@ -358,6 +415,13 @@ public sealed class VirtualTerminal : ITerminal
                     if (mode == 25)
                     {
                         _isCursorVisible = enable;
+                    }
+                    else if (mode is 1000 or 1002 or 1003 or 1006)
+                    {
+                        if (enable)
+                            _mouseModes.Add(mode);
+                        else
+                            _mouseModes.Remove(mode);
                     }
                     else if (mode == 1049 && enable != _isAlternateScreen)
                     {

@@ -1,5 +1,6 @@
 using System.Drawing;
 using Ambystech.Elaris.UI.Core;
+using Ambystech.Elaris.UI.Input;
 using Ambystech.Elaris.UI.Rendering;
 
 namespace Ambystech.Elaris.UI.Widgets;
@@ -247,7 +248,11 @@ public abstract class Widget
         if (child._parent != null)
             throw new InvalidOperationException("Widget already has a parent");
 
-        _children.Add(child);
+        // Keep children ordered by ZIndex; among equal ZIndex, in the order they were added.
+        int index = _children.Count;
+        while (index > 0 && _children[index - 1].ZIndex > child.ZIndex)
+            index--;
+        _children.Insert(index, child);
         child._parent = this;
         OnChildAdded(child);
         Invalidate();
@@ -304,7 +309,10 @@ public abstract class Widget
     /// </summary>
     internal void SortChildrenByZIndex()
     {
-        _children.Sort((a, b) => a.ZIndex.CompareTo(b.ZIndex));
+        // Stable: children with equal ZIndex keep their relative order.
+        var ordered = _children.OrderBy(c => c.ZIndex).ToList();
+        _children.Clear();
+        _children.AddRange(ordered);
     }
 
     /// <summary>
@@ -393,7 +401,60 @@ public abstract class Widget
     protected internal virtual bool OnKeyPress(ConsoleKeyInfo key) => false;
 
     /// <summary>
-    /// Called when the mouse is clicked.
+    /// Called when the left mouse button is pressed on this widget (by the default <see cref="OnMouse"/>).
     /// </summary>
+    /// <returns><c>true</c> if the click was handled.</returns>
     protected internal virtual bool OnMouseClick(Point position) => false;
+
+    /// <summary>
+    /// Called for mouse events on this widget, or on a child that didn't handle them.
+    /// The default calls <see cref="OnMouseClick"/> for a left-button press.
+    /// </summary>
+    /// <remarks>
+    /// After a left-button press, the widget that received it also gets the following drag and
+    /// release events, even when the pointer has moved off it.
+    /// </remarks>
+    /// <returns><c>true</c> if the event was handled; otherwise it goes to the parent.</returns>
+    protected internal virtual bool OnMouse(MouseEvent e)
+        => e.IsLeftPress && OnMouseClick(e.Position);
+
+    /// <summary>
+    /// Translates a wheel event into Up/Down arrow key presses (3 per notch), for widgets that
+    /// already scroll with the arrow keys.
+    /// </summary>
+    /// <returns><c>true</c> if <paramref name="e"/> was a wheel event and a key press was handled.</returns>
+    protected bool ScrollWithArrowKeys(MouseEvent e, int linesPerNotch = 3)
+    {
+        if (!e.IsWheel)
+            return false;
+
+        var key = e.Kind == MouseEventKind.WheelUp ? ConsoleKey.UpArrow : ConsoleKey.DownArrow;
+        bool handled = false;
+        for (int i = 0; i < linesPerNotch; i++)
+            handled |= OnKeyPress(new ConsoleKeyInfo('\0', key, false, false, false));
+        return handled;
+    }
+
+    /// <summary>
+    /// Returns the topmost visible widget at <paramref name="point"/>: a child (last drawn first)
+    /// or this widget, or <c>null</c>. Children are only considered inside the area they are
+    /// clipped to.
+    /// </summary>
+    public virtual Widget? HitTest(Point point)
+    {
+        if (!Visible)
+            return null;
+
+        if (_children.Count > 0 && (ChildClipRectangle is not { } clip || clip.Contains(point)))
+        {
+            for (int i = _children.Count - 1; i >= 0; i--)
+            {
+                var hit = _children[i].HitTest(point);
+                if (hit != null)
+                    return hit;
+            }
+        }
+
+        return Width > 0 && Height > 0 && Bounds.Contains(point) ? this : null;
+    }
 }

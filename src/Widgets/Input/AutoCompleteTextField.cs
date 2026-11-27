@@ -1,6 +1,7 @@
 using System.Drawing;
 using Ambystech.Elaris.UI.Core;
 using Ambystech.Elaris.UI.Rendering;
+using Ambystech.Elaris.UI.Input;
 
 namespace Ambystech.Elaris.UI.Widgets.Input;
 
@@ -274,6 +275,47 @@ public class AutoCompleteTextField : TextField
                 _listBox.Render(screen);
             }
         }
+    }
+
+    /// <summary>
+    /// Includes the suggestion popup, which is drawn outside the field's bounds.
+    /// </summary>
+    public override Widget? HitTest(System.Drawing.Point point)
+    {
+        if (Visible && _isPopupVisible && _listBox.Visible && _listBox.Bounds.Contains(point))
+            return this;
+
+        return base.HitTest(point);
+    }
+
+    /// <summary>
+    /// A left click on a suggestion accepts it; the wheel over the popup moves the selection.
+    /// Clicks on the field itself move the cursor.
+    /// </summary>
+    protected internal override bool OnMouse(MouseEvent e)
+    {
+        bool inPopup = _isPopupVisible && _listBox.Visible && _listBox.Bounds.Contains(e.Position);
+
+        if (inPopup && e.IsLeftPress)
+        {
+            int index = _listBox.IndexAtRow(e.Y);
+            if (index >= 0)
+            {
+                _listBox.SelectedIndex = index;
+                AcceptSuggestion();
+            }
+            return true;
+        }
+
+        if (inPopup && e.IsWheel)
+        {
+            int delta = e.Kind == MouseEventKind.WheelUp ? -1 : 1;
+            _listBox.SelectedIndex = Math.Clamp(_listBox.SelectedIndex + delta, 0, _listBox.Items.Count - 1);
+            Invalidate();
+            return true;
+        }
+
+        return base.OnMouse(e);
     }
 
     protected internal override bool OnKeyPress(ConsoleKeyInfo key)
