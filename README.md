@@ -287,4 +287,5 @@ Contributions welcome! Please open an issue or PR on GitHub.
 
 - GitHub: https://github.com/ambystechcom/Ambystech.Elaris.UI
 - NuGet: https://www.nuget.org/packages/Ambystech.Elaris.UI
+- Changelog: [CHANGELOG.md](CHANGELOG.md)
 - Documentation: (Coming soon)

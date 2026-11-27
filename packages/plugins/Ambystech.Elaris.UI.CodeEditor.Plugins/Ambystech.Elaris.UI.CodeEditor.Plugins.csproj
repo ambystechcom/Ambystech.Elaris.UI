@@ -19,6 +19,7 @@
     <PackageProjectUrl>https://github.com/ambystechcom/Ambystech.Elaris.UI</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ambystechcom/Ambystech.Elaris.UI</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <PackageReleaseNotes>See https://github.com/ambystechcom/Ambystech.Elaris.UI/blob/main/CHANGELOG.md</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <RootNamespace>Ambystech.Elaris.UI.CodeEditor.Plugins</RootNamespace>
     <PackageReadmeFile>README.md</PackageReadmeFile>
