@@ -91,6 +91,19 @@ Set `app.MouseEnabled = false` to turn it off. While mouse reporting is on, most
 
 Elaris.UI is designed to work seamlessly across Windows, macOS, and Linux terminals that support ANSI escape codes. Ensure your terminal supports truecolor for the best experience.
 
+#### Color support
+
+Elaris detects how many colors the terminal supports and converts colors to fit:
+
+| Environment | Mode |
+|---|---|
+| `NO_COLOR` set ([no-color.org](https://no-color.org)) | `NoColor`: no colors; highlights (selection, focused button, status bar) use reverse video |
+| `COLORTERM=truecolor` or `24bit`, Windows Terminal, iTerm2, WezTerm, Ghostty, VS Code | `TrueColor`: 24-bit RGB |
+| `TERM` containing `256color` (e.g. macOS Terminal, tmux, many SSH sessions) | `Palette256`: nearest xterm 256-color entry |
+| Other `TERM` values (e.g. `xterm`, `linux`) | `Palette16`: nearest of the 16 ANSI colors |
+
+When conversion would make text unreadable on its background, the text color is switched to black or white. Override the detection with `app.ColorMode = ColorMode.Palette256;` (also while running).
+
 #### Windows Terminal
 
 ![Windows Terminal](assets/windows_terminal.png)

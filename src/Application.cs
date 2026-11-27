@@ -43,6 +43,28 @@ public partial class Application
     public TimeSpan DoubleClickTime { get; set; } = TimeSpan.FromMilliseconds(400);
 
     /// <summary>
+    /// Gets or sets the color mode, overriding what the terminal reports
+    /// (<see cref="ITerminal.ColorMode"/>). When <c>null</c> (the default), the terminal's mode is
+    /// used: on the console it is detected from <c>NO_COLOR</c>, <c>COLORTERM</c> and <c>TERM</c>.
+    /// Can be changed while the application runs.
+    /// </summary>
+    public Rendering.ColorMode? ColorMode
+    {
+        get => _colorMode;
+        set
+        {
+            _colorMode = value;
+            if (_screen != null)
+            {
+                _screen.ColorMode = value ?? _terminal.ColorMode;
+                RequestRender();
+            }
+        }
+    }
+
+    private Rendering.ColorMode? _colorMode;
+
+    /// <summary>
     /// Gets or sets whether to turn on mouse reporting when the terminal supports it
     /// (<see cref="ITerminal.SupportsMouse"/>). Defaults to <c>true</c>. Set before <see cref="Run"/>.
     /// </summary>
@@ -213,7 +235,7 @@ public partial class Application
         int width = _terminal.Width;
         int height = _terminal.Height;
 
-        _screen = new Screen(width, height, _terminal);
+        _screen = new Screen(width, height, _terminal) { ColorMode = _colorMode ?? _terminal.ColorMode };
         _screen.Initialize();
 
         _mouseReportingOn = MouseEnabled && _terminal.SupportsMouse;
@@ -322,6 +344,7 @@ public partial class Application
             _screen.Clear();
 
             var theme = _rootWidget.EffectiveTheme;
+            _screen.BaseBackground = theme.Background;
             if (theme.Background.A > 0)
             {
                 _screen.FillRectangle(new Rectangle(0, 0, _screen.Width, _screen.Height), ' ', theme.Foreground, theme.Background);
