@@ -1,3 +1,5 @@
+using Ambystech.Elaris.UI.Input;
+
 namespace Ambystech.Elaris.UI.Terminal;
 
 /// <summary>
@@ -53,4 +55,27 @@ public interface ITerminal
     /// </summary>
     /// <returns><c>true</c> if a key was read; otherwise <c>false</c>.</returns>
     bool TryReadKey(out ConsoleKeyInfo key);
+
+    /// <summary>
+    /// Gets whether this terminal can report mouse events through <see cref="TryReadInput"/>.
+    /// Defaults to <c>false</c>.
+    /// </summary>
+    bool SupportsMouse => false;
+
+    /// <summary>
+    /// Reads a key press or mouse event if one is waiting, without blocking.
+    /// The default implementation returns keys from <see cref="TryReadKey"/>.
+    /// </summary>
+    /// <returns><c>true</c> if an input was read; otherwise <c>false</c>.</returns>
+    bool TryReadInput(out TerminalInput input)
+    {
+        if (TryReadKey(out var key))
+        {
+            input = TerminalInput.FromKey(key);
+            return true;
+        }
+
+        input = default;
+        return false;
+    }
 }

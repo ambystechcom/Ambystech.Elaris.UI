@@ -1,6 +1,7 @@
 using System.Drawing;
 using Ambystech.Elaris.UI.Core;
 using Ambystech.Elaris.UI.Rendering;
+using Ambystech.Elaris.UI.Input;
 
 namespace Ambystech.Elaris.UI.Widgets.Layout;
 
@@ -192,6 +193,40 @@ public class TabContainer : Container
         content.Y = Y + _tabBarHeight;
         content.Width = Width;
         content.Height = Math.Max(0, Height - _tabBarHeight);
+    }
+
+    /// <summary>
+    /// Left click on a tab title activates that tab.
+    /// </summary>
+    protected internal override bool OnMouse(MouseEvent e)
+    {
+        if (e.IsLeftPress && e.Y >= Y && e.Y < Y + _tabBarHeight)
+        {
+            // Same layout as RenderTabBar.
+            int currentX = X + 1;
+            for (int i = 0; i < _tabs.Count; i++)
+            {
+                var tab = _tabs[i];
+                if (!tab.IsEnabled)
+                    continue;
+
+                int tabWidth = tab.Title.Length + 4;
+                if (currentX + tabWidth > X + Width)
+                    break;
+
+                if (e.X >= currentX && e.X < currentX + tabWidth)
+                {
+                    ActiveTabIndex = i;
+                    return true;
+                }
+
+                currentX += tabWidth + 1;
+            }
+
+            return true;
+        }
+
+        return base.OnMouse(e);
     }
 
     protected internal override bool OnKeyPress(ConsoleKeyInfo key)

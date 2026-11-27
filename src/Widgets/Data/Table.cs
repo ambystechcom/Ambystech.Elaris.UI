@@ -2,6 +2,7 @@ using System.Collections;
 using System.Drawing;
 using Ambystech.Elaris.UI.Core;
 using Ambystech.Elaris.UI.Rendering;
+using Ambystech.Elaris.UI.Input;
 
 namespace Ambystech.Elaris.UI.Widgets.Data;
 
@@ -313,6 +314,28 @@ public class Table : Widget
             _verticalScrollOffset = rowIndex;
         else if (rowIndex >= _verticalScrollOffset + visibleRows)
             _verticalScrollOffset = rowIndex - visibleRows + 1;
+    }
+
+    /// <summary>
+    /// Left click selects a row; double click raises <see cref="RowActivated"/>.
+    /// The wheel moves the selection.
+    /// </summary>
+    protected internal override bool OnMouse(MouseEvent e)
+    {
+        if (e.IsLeftPress)
+        {
+            int headerHeight = ShowHeader ? 2 : 0;
+            int row = _verticalScrollOffset + (e.Y - Y - headerHeight);
+            if (e.Y >= Y + headerHeight && e.Y < Y + Height && row >= 0 && row < _rows.Count)
+            {
+                SelectedRowIndex = row;
+                if (e.ClickCount == 2)
+                    RowActivated?.Invoke(_rows[row]);
+            }
+            return true;
+        }
+
+        return ScrollWithArrowKeys(e) || base.OnMouse(e);
     }
 
     protected internal override bool OnKeyPress(ConsoleKeyInfo key)

@@ -1,6 +1,7 @@
 using System.Drawing;
 using Ambystech.Elaris.UI.Core;
 using Ambystech.Elaris.UI.Rendering;
+using Ambystech.Elaris.UI.Input;
 
 namespace Ambystech.Elaris.UI.Widgets.Input;
 
@@ -105,6 +106,11 @@ public class ListBox : Widget
     /// Event raised when the selected index changes.
     /// </summary>
     public event Action<int>? SelectionChanged;
+
+    /// <summary>
+    /// Raised with the item index when an item is activated: Enter, or a double click.
+    /// </summary>
+    public event Action<int>? ItemActivated;
 
     /// <summary>
     /// Gets whether this widget can receive keyboard focus.
@@ -218,10 +224,48 @@ public class ListBox : Widget
         base.OnBlur();
     }
 
+    /// <summary>
+    /// Returns the index of the item drawn on screen row <paramref name="y"/>, or -1.
+    /// </summary>
+    internal int IndexAtRow(int y)
+    {
+        int index = _scrollOffset + (y - Y);
+        return y >= Y && y < Y + Height && index >= 0 && index < _items.Count ? index : -1;
+    }
+
+    /// <summary>
+    /// Left click selects an item, double click raises <see cref="ItemActivated"/>, and the wheel
+    /// moves the selection.
+    /// </summary>
+    protected internal override bool OnMouse(MouseEvent e)
+    {
+        if (e.IsLeftPress)
+        {
+            int index = IndexAtRow(e.Y);
+            if (index >= 0)
+            {
+                SelectedIndex = index;
+                if (e.ClickCount == 2)
+                    ItemActivated?.Invoke(index);
+            }
+            return true;
+        }
+
+        return ScrollWithArrowKeys(e) || base.OnMouse(e);
+    }
+
     protected internal override bool OnKeyPress(ConsoleKeyInfo key)
     {
         switch (key.Key)
         {
+            case ConsoleKey.Enter:
+                if (_selectedIndex >= 0 && _selectedIndex < _items.Count)
+                {
+                    ItemActivated?.Invoke(_selectedIndex);
+                    return true;
+                }
+                break;
+
             case ConsoleKey.UpArrow:
                 if (_selectedIndex > 0)
                 {

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
+using Ambystech.Elaris.UI.Input;
 using Ambystech.Elaris.UI.Rendering;
 using Ambystech.Elaris.UI.Terminal;
 using Ambystech.Elaris.UI.Widgets;
@@ -28,6 +29,27 @@ public partial class Application
     private int _renderRequested;
     private bool _isRendering;
     private ExceptionDispatchInfo? _fatalException;
+    private bool _mouseReportingOn;
+    private Widget? _mouseCapture;
+    private MouseEvent? _lastLeftPress;
+    private long _lastLeftPressTicks;
+
+    private const string EnableMouseSequence = "\x1b[?1000h\x1b[?1002h\x1b[?1006h";
+    private const string DisableMouseSequence = "\x1b[?1006l\x1b[?1002l\x1b[?1000l";
+
+    /// <summary>
+    /// Two left clicks at the same position within this time count as a double click.
+    /// </summary>
+    public TimeSpan DoubleClickTime { get; set; } = TimeSpan.FromMilliseconds(400);
+
+    /// <summary>
+    /// Gets or sets whether to turn on mouse reporting when the terminal supports it
+    /// (<see cref="ITerminal.SupportsMouse"/>). Defaults to <c>true</c>. Set before <see cref="Run"/>.
+    /// </summary>
+    /// <remarks>
+    /// While mouse reporting is on, most terminals select text only with Shift held down.
+    /// </remarks>
+    public bool MouseEnabled { get; set; } = true;
 
     /// <summary>
     /// Creates an application that runs in the console.
@@ -194,6 +216,13 @@ public partial class Application
         _screen = new Screen(width, height, _terminal);
         _screen.Initialize();
 
+        _mouseReportingOn = MouseEnabled && _terminal.SupportsMouse;
+        if (_mouseReportingOn)
+        {
+            _terminal.Write(EnableMouseSequence);
+            _terminal.Flush();
+        }
+
         try
         {
             _previousTreatControlCAsInput = _terminal.TreatControlCAsInput;
@@ -315,11 +344,14 @@ public partial class Application
 
         for (int i = 0; i < MaxKeysPerFrame && _running; i++)
         {
-            if (!_terminal.TryReadKey(out var key))
+            if (!_terminal.TryReadInput(out var input))
                 break;
 
             any = true;
-            RunOnUiThread(() => HandleKey(key));
+            if (input.Mouse is { } mouse)
+                RunOnUiThread(() => HandleMouse(mouse));
+            else
+                RunOnUiThread(() => HandleKey(input.Key));
         }
 
         return any;
@@ -361,6 +393,70 @@ public partial class Application
         }
     }
 
+    /// <summary>
+    /// Routes a mouse event: finds the widget under the pointer (or the widget holding the mouse
+    /// since a left press), moves focus on a left press, then offers the event to the widget
+    /// and its parents until one handles it.
+    /// </summary>
+    internal void HandleMouse(MouseEvent e)
+    {
+        if (_rootWidget == null)
+            return;
+
+        if (e.IsLeftPress)
+            e = e with { ClickCount = CountClicks(e) };
+
+        bool captured = _mouseCapture != null
+            && e.Kind is MouseEventKind.Drag or MouseEventKind.Release;
+
+        var target = captured ? _mouseCapture : _rootWidget.HitTest(e.Position);
+
+        if (e.IsLeftPress)
+        {
+            _mouseCapture = target;
+
+            for (var w = target; w != null; w = w.Parent)
+            {
+                if (w.IsFocusable && w.Enabled)
+                {
+                    SetFocus(w);
+                    break;
+                }
+            }
+        }
+
+        try
+        {
+            for (var w = target; w != null; w = w.Parent)
+            {
+                if (w.Enabled && w.OnMouse(e))
+                    break;
+            }
+        }
+        finally
+        {
+            if (e.Kind == MouseEventKind.Release)
+                _mouseCapture = null;
+        }
+    }
+
+    private int CountClicks(MouseEvent press)
+    {
+        long now = Environment.TickCount64;
+        int count = 1;
+
+        if (_lastLeftPress is { } last
+            && last.X == press.X && last.Y == press.Y
+            && now - _lastLeftPressTicks <= (long)DoubleClickTime.TotalMilliseconds)
+        {
+            count = Math.Min(last.ClickCount + 1, 3);
+        }
+
+        _lastLeftPress = press with { ClickCount = count };
+        _lastLeftPressTicks = now;
+        return count;
+    }
+
     /// <returns><c>true</c> if the terminal size changed.</returns>
     private bool HandleResize()
     {
@@ -398,6 +494,12 @@ public partial class Application
 
         try
         {
+            if (_mouseReportingOn)
+            {
+                _terminal.Write(DisableMouseSequence);
+                _mouseReportingOn = false;
+            }
+
             _screen?.Shutdown();
         }
         catch (IOException)

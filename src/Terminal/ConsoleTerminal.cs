@@ -1,4 +1,5 @@
 using System.Text;
+using Ambystech.Elaris.UI.Input;
 
 namespace Ambystech.Elaris.UI.Terminal;
 
@@ -8,6 +9,22 @@ namespace Ambystech.Elaris.UI.Terminal;
 public sealed class ConsoleTerminal : ITerminal
 {
     private Encoding? _previousOutputEncoding;
+    private readonly MouseSequenceDecoder _decoder;
+
+    /// <summary>
+    /// Creates a terminal backed by <see cref="Console"/>.
+    /// </summary>
+    public ConsoleTerminal()
+    {
+        _decoder = new MouseSequenceDecoder(IsKeyAvailable, () => Console.ReadKey(intercept: true));
+    }
+
+    /// <summary>
+    /// <c>true</c> on macOS and Linux, where mouse reports arrive through standard input.
+    /// On Windows, .NET reads input with <c>ReadConsoleInput</c> and drops mouse events, so
+    /// mouse support is not available there yet.
+    /// </summary>
+    public bool SupportsMouse => !OperatingSystem.IsWindows();
 
     /// <inheritdoc />
     public int Width => Console.WindowWidth;
@@ -56,21 +73,34 @@ public sealed class ConsoleTerminal : ITerminal
     /// <inheritdoc />
     public bool TryReadKey(out ConsoleKeyInfo key)
     {
-        try
+        // Read through the decoder so keys it has looked ahead at are not lost.
+        while (_decoder.TryRead(out var input))
         {
-            if (Console.KeyAvailable)
+            if (!input.IsMouse)
             {
-                key = Console.ReadKey(intercept: true);
+                key = input.Key;
                 return true;
             }
-        }
-        catch (InvalidOperationException)
-        {
-            // Input is redirected; there is no interactive keyboard.
         }
 
         key = default;
         return false;
+    }
+
+    /// <inheritdoc />
+    public bool TryReadInput(out TerminalInput input) => _decoder.TryRead(out input);
+
+    private static bool IsKeyAvailable()
+    {
+        try
+        {
+            return Console.KeyAvailable;
+        }
+        catch (InvalidOperationException)
+        {
+            // Input is redirected; there is no interactive keyboard.
+            return false;
+        }
     }
 
     private static void TrySetCursorVisible(bool visible)

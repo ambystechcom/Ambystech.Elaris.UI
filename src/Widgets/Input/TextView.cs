@@ -1,4 +1,5 @@
 using Ambystech.Elaris.UI.Rendering;
+using Ambystech.Elaris.UI.Input;
 
 namespace Ambystech.Elaris.UI.Widgets.Input;
 
@@ -170,6 +171,12 @@ public class TextView : Widget
             screen.WriteText(X, renderY, line, ForegroundColor, BackgroundColor);
         }
     }
+
+    /// <summary>
+    /// The wheel scrolls the text.
+    /// </summary>
+    protected internal override bool OnMouse(MouseEvent e)
+        => ScrollWithArrowKeys(e) || base.OnMouse(e);
 
     protected internal override bool OnKeyPress(ConsoleKeyInfo key)
     {

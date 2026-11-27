@@ -1,6 +1,7 @@
 using System.Drawing;
 using Ambystech.Elaris.UI.Core;
 using Ambystech.Elaris.UI.Rendering;
+using Ambystech.Elaris.UI.Input;
 
 namespace Ambystech.Elaris.UI.Widgets.Menu;
 
@@ -48,6 +49,30 @@ internal class MenuDropdown : Widget
     public MenuDropdown()
     {
         ZIndex = 1000; // Ensure dropdown renders on top
+    }
+
+    /// <summary>
+    /// Called with the item index when an item is clicked. Set by <see cref="MenuBar"/>.
+    /// </summary>
+    internal Action<int>? ItemClicked { get; set; }
+
+    /// <summary>
+    /// A left click on an item (released over the same dropdown) activates it.
+    /// </summary>
+    protected internal override bool OnMouse(MouseEvent e)
+    {
+        if (e.IsLeftPress || e.Kind == MouseEventKind.Drag)
+            return true;
+
+        if (e.IsLeftRelease)
+        {
+            int index = e.Y - Y;
+            if (Bounds.Contains(e.Position) && index >= 0 && index < Menu.SubItems.Count)
+                ItemClicked?.Invoke(index);
+            return true;
+        }
+
+        return base.OnMouse(e);
     }
 
     protected override void OnRender(Screen screen)
