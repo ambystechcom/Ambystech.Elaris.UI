@@ -68,6 +68,33 @@ app.Run(frame);
 
 The terminal is restored on exit, including on Ctrl+C, process termination and unhandled exceptions.
 
+### Dialogs
+
+Show a message and wait for the answer:
+
+```csharp
+using Ambystech.Elaris.UI.Widgets.Dialogs;
+
+var answer = await MessageBox.Show(app, "Discard unsaved changes?", "Close", MessageBoxButtons.YesNo);
+if (answer == DialogResult.Yes) Discard();
+```
+
+Or build your own: a `Dialog` is a `Frame`, so add widgets and lay them out as usual:
+
+```csharp
+var dialog = new Dialog("Rename") { Width = 44, Height = 9, LayoutMode = LayoutMode.Vertical, Padding = 1 };
+var name = new TextField("New name") { Height = 1 };
+var ok = new Button("OK") { Width = 10, Height = 3 };
+ok.Click += () => dialog.Close(DialogResult.OK);
+dialog.Add(name);
+dialog.Add(ok);
+
+if (await app.ShowDialog(dialog) == DialogResult.OK)
+    Rename(name.Text);
+```
+
+Dialogs are modal and centered: focus stays inside (Tab / Shift+Tab, Alt+←/→; arrow keys in message boxes), clicks outside are ignored, and Esc closes the dialog (with `Cancel`) instead of quitting. Focus returns where it was when the dialog closes. Dialogs can open other dialogs. See `examples/Elaris.Examples.DialogsDemo`.
+
 ### Mouse
 
 On macOS and Linux, the mouse works out of the box:

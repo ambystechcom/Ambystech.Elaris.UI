@@ -127,7 +127,10 @@ public class TextField : Widget
             int cursorX = X + _cursorPosition;
             if (cursorX < X + Width)
             {
-                char cursorChar = _cursorPosition < _text.Length ? _text[_cursorPosition] : ' ';
+                // Over the placeholder, keep its character visible (inverted) instead of a blank.
+                char cursorChar = _cursorPosition < _text.Length ? _text[_cursorPosition]
+                    : _text.Length == 0 && _cursorPosition < displayText.Length ? displayText[_cursorPosition]
+                    : ' ';
                 screen.SetCell(cursorX, Y, new Cell(cursorChar, BackgroundColor, ForegroundColor));
             }
         }
