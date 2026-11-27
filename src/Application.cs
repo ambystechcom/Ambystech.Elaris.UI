@@ -207,6 +207,7 @@ public partial class Application
             _uiThreadId = -1;
             rootWidget.RenderRequested = null;
             CancelQueuedActions();
+            CancelOpenDialogs();
         }
 
         _fatalException?.Throw();
@@ -351,6 +352,7 @@ public partial class Application
             }
 
             _rootWidget.Render(_screen);
+            RenderDialogs();
             _screen.Render();
             RenderCount++;
         }
@@ -410,7 +412,11 @@ public partial class Application
 
         bool handled = _focusedWidget?.OnKeyPress(key) ?? false;
 
-        if (!handled && QuitKey.HasValue && key.Key == QuitKey.Value && key.Modifiers == 0)
+        if (!handled && HandleDialogKey(key))
+            return;
+
+        // While a dialog is open, the quit key never quits; Escape closes the dialog instead.
+        if (!handled && _dialogs.Count == 0 && QuitKey.HasValue && key.Key == QuitKey.Value && key.Modifiers == 0)
         {
             Stop();
         }
@@ -432,7 +438,15 @@ public partial class Application
         bool captured = _mouseCapture != null
             && e.Kind is MouseEventKind.Drag or MouseEventKind.Release;
 
-        var target = captured ? _mouseCapture : _rootWidget.HitTest(e.Position);
+        // While a dialog is open, only the top dialog receives the mouse.
+        var target = captured ? _mouseCapture : FocusRoot?.HitTest(e.Position);
+
+        if (target == null)
+        {
+            if (e.Kind == MouseEventKind.Release)
+                _mouseCapture = null;
+            return;
+        }
 
         if (e.IsLeftPress)
         {
@@ -493,6 +507,7 @@ public partial class Application
         {
             _screen.Resize(currentWidth, currentHeight);
             _rootWidget.Bounds = new Rectangle(0, 0, currentWidth, currentHeight);
+            RecenterDialogs();
             return true;
         }
 
@@ -652,8 +667,8 @@ public partial class Application
     internal List<Widget> GetFocusableWidgets()
     {
         var focusable = new List<Widget>();
-        if (_rootWidget != null)
-            CollectFocusableWidgets(_rootWidget, focusable);
+        if (FocusRoot is { } scope)
+            CollectFocusableWidgets(scope, focusable);
         return focusable;
     }
 
@@ -674,14 +689,15 @@ public partial class Application
     /// </summary>
     private void EnsureFocusIsValid()
     {
-        if (_rootWidget == null || _focusedWidget == null || _focusedWidget == _rootWidget)
+        var scope = FocusRoot;
+        if (scope == null || _focusedWidget == null || _focusedWidget == scope)
             return;
 
         if (IsReachable(_focusedWidget))
             return;
 
         var focusable = GetFocusableWidgets();
-        SetFocus(focusable.Count > 0 ? focusable[0] : _rootWidget);
+        SetFocus(focusable.Count > 0 ? focusable[0] : scope);
     }
 
     private bool IsReachable(Widget widget)
@@ -691,7 +707,7 @@ public partial class Application
             if (!current.Visible || !current.Enabled)
                 return false;
 
-            if (current == _rootWidget)
+            if (current == FocusRoot)
                 return true;
         }
 
