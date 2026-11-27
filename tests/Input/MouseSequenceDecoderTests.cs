@@ -126,26 +126,53 @@ public class MouseSequenceDecoderTests
         text.Should().Be("\x1b[<0;x;1Mz");
     }
 
+    /// <summary>
+    /// Key source where the second part arrives only after the decoder has checked for input
+    /// a number of times, simulating a sequence split across reads. No threads or wall clock.
+    /// </summary>
+    private sealed class SplitSource(string first, string second, int checksBeforeSecond)
+    {
+        private readonly Queue<ConsoleKeyInfo> _keys = Keys(first);
+        private int _emptyChecks;
+
+        public bool IsAvailable()
+        {
+            if (_keys.Count > 0)
+                return true;
+
+            if (second.Length > 0 && ++_emptyChecks >= checksBeforeSecond)
+            {
+                foreach (var k in Keys(second))
+                    _keys.Enqueue(k);
+                second = "";
+                return true;
+            }
+
+            return false;
+        }
+
+        public ConsoleKeyInfo Read() => _keys.Dequeue();
+    }
+
     [Fact]
     public void TryRead_SequenceArrivingInPieces_IsStillDecoded()
     {
-        var keys = new Queue<ConsoleKeyInfo>(Keys("\x1b[<"));
+        var source = new SplitSource("\x1b[<", "0;3;3M", checksBeforeSecond: 3);
+        var decoder = new MouseSequenceDecoder(source.IsAvailable, source.Read);
 
-        var later = Task.Run(async () =>
-        {
-            await Task.Delay(10);
-            lock (keys)
-                foreach (var k in Keys("0;3;3M"))
-                    keys.Enqueue(k);
-        });
-
-        var decoderWithLock = new MouseSequenceDecoder(
-            () => { lock (keys) return keys.Count > 0; },
-            () => { lock (keys) return keys.Dequeue(); });
-
-        decoderWithLock.TryRead(out var input).Should().BeTrue();
-        later.Wait();
+        decoder.TryRead(out var input).Should().BeTrue();
 
         input.Mouse.Should().Be(new MouseEvent(2, 2, MouseButton.Left, MouseEventKind.Press));
+    }
+
+    [Fact]
+    public void TryRead_SequenceThatNeverCompletes_IsReturnedAsKeys()
+    {
+        var source = new SplitSource("\x1b[<0;3", "", checksBeforeSecond: int.MaxValue);
+        var decoder = new MouseSequenceDecoder(source.IsAvailable, source.Read);
+
+        var text = new string(ReadAll(decoder).Select(i => i.Key.KeyChar).ToArray());
+
+        text.Should().Be("\x1b[<0;3");
     }
 }
