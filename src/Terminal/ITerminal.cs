@@ -1,4 +1,5 @@
 using Ambystech.Elaris.UI.Input;
+using Ambystech.Elaris.UI.Rendering;
 
 namespace Ambystech.Elaris.UI.Terminal;
 
@@ -55,6 +56,11 @@ public interface ITerminal
     /// </summary>
     /// <returns><c>true</c> if a key was read; otherwise <c>false</c>.</returns>
     bool TryReadKey(out ConsoleKeyInfo key);
+
+    /// <summary>
+    /// Gets how many colors the terminal can show. Defaults to <see cref="Rendering.ColorMode.TrueColor"/>.
+    /// </summary>
+    ColorMode ColorMode => ColorMode.TrueColor;
 
     /// <summary>
     /// Gets whether this terminal can report mouse events through <see cref="TryReadInput"/>.

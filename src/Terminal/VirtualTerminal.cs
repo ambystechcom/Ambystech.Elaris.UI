@@ -38,6 +38,9 @@ public sealed class VirtualTerminal : ITerminal
     private bool _bold;
     private bool _italic;
     private bool _underline;
+    private bool _reverse;
+    private bool[,] _mainReverse;
+    private bool[,] _alternateReverse;
     private bool _isAlternateScreen;
     private bool _isCursorVisible = true;
     private readonly HashSet<int> _mouseModes = [];
@@ -57,6 +60,8 @@ public sealed class VirtualTerminal : ITerminal
         _height = height;
         _main = CreateGrid(width, height);
         _alternate = CreateGrid(width, height);
+        _mainReverse = new bool[height, width];
+        _alternateReverse = new bool[height, width];
     }
 
     /// <inheritdoc />
@@ -100,6 +105,22 @@ public sealed class VirtualTerminal : ITerminal
     public bool SupportsMouse => true;
 
     /// <summary>
+    /// Gets or sets the color mode this terminal reports to the application.
+    /// Defaults to <see cref="ColorMode.TrueColor"/>. Palette colors written to the terminal
+    /// are decoded to their RGB values whatever this is set to.
+    /// </summary>
+    public ColorMode ColorMode { get; set; } = ColorMode.TrueColor;
+
+    /// <summary>
+    /// Gets whether the cell at the given position was written in reverse video (<c>ESC[7m</c>).
+    /// </summary>
+    public bool IsReverse(int x, int y)
+    {
+        lock (_lock)
+            return ReverseGrid[y, x];
+    }
+
+    /// <summary>
     /// Gets whether <see cref="Initialize"/> has been called without a matching <see cref="Restore"/>.
     /// </summary>
     public bool IsInitialized { get { lock (_lock) return _isInitialized; } }
@@ -123,6 +144,8 @@ public sealed class VirtualTerminal : ITerminal
             _height = height;
             _main = CreateGrid(width, height);
             _alternate = CreateGrid(width, height);
+            _mainReverse = new bool[height, width];
+            _alternateReverse = new bool[height, width];
             _cursorX = 0;
             _cursorY = 0;
         }
@@ -303,6 +326,10 @@ public sealed class VirtualTerminal : ITerminal
 
     private Cell[,] ActiveGrid => _isAlternateScreen ? _alternate : _main;
 
+    private bool[,] ReverseGrid => _isAlternateScreen ? _alternateReverse : _mainReverse;
+
+    private void ClearReverse(bool[,] grid) => Array.Clear(grid);
+
     private static Cell[,] CreateGrid(int width, int height)
     {
         var grid = new Cell[height, width];
@@ -373,6 +400,7 @@ public sealed class VirtualTerminal : ITerminal
         }
 
         ActiveGrid[_cursorY, _cursorX] = new Cell(c, _foreground, _background, _bold, _italic, _underline);
+        ReverseGrid[_cursorY, _cursorX] = _reverse;
         _cursorX++;
     }
 
@@ -397,11 +425,15 @@ public sealed class VirtualTerminal : ITerminal
 
             case 'J' when Arg(0, 0) == 2:
                 Fill(ActiveGrid, BlankCell);
+                ClearReverse(ReverseGrid);
                 break;
 
             case 'K':
                 for (int x = Math.Min(_cursorX, _width); x < _width; x++)
+                {
                     ActiveGrid[_cursorY, x] = BlankCell;
+                    ReverseGrid[_cursorY, x] = false;
+                }
                 break;
 
             case 'm':
@@ -427,7 +459,10 @@ public sealed class VirtualTerminal : ITerminal
                     {
                         _isAlternateScreen = enable;
                         if (enable)
+                        {
                             Fill(_alternate, BlankCell);
+                            ClearReverse(_alternateReverse);
+                        }
                     }
                 }
                 break;
@@ -453,6 +488,20 @@ public sealed class VirtualTerminal : ITerminal
                 case 22: _bold = false; break;
                 case 23: _italic = false; break;
                 case 24: _underline = false; break;
+                case 7: _reverse = true; break;
+                case 27: _reverse = false; break;
+                case >= 30 and <= 37: _foreground = ColorConversion.Ansi16[args[i] - 30]; break;
+                case >= 90 and <= 97: _foreground = ColorConversion.Ansi16[args[i] - 90 + 8]; break;
+                case >= 40 and <= 47: _background = ColorConversion.Ansi16[args[i] - 40]; break;
+                case >= 100 and <= 107: _background = ColorConversion.Ansi16[args[i] - 100 + 8]; break;
+                case 38 or 48 when i + 2 < args.Length && args[i + 1] == 5:
+                    var paletteColor = ColorConversion.FromPalette256(args[i + 2]);
+                    if (args[i] == 38)
+                        _foreground = paletteColor;
+                    else
+                        _background = paletteColor;
+                    i += 2;
+                    break;
                 case 39: _foreground = DefaultForeground; break;
                 case 49: _background = DefaultBackground; break;
                 case 38 or 48 when i + 4 < args.Length && args[i + 1] == 2:
@@ -474,5 +523,6 @@ public sealed class VirtualTerminal : ITerminal
         _bold = false;
         _italic = false;
         _underline = false;
+        _reverse = false;
     }
 }

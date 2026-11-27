@@ -26,6 +26,7 @@ public class Screen
     private readonly object _lock = new();
     private readonly Stack<Rectangle> _clipStack = new();
     private Rectangle _clip;
+    private ColorMode _colorMode = ColorMode.TrueColor;
 
     /// <summary>
     /// Gets the screen width in columns.
@@ -41,6 +42,38 @@ public class Screen
     /// Gets the terminal this screen draws to.
     /// </summary>
     public ITerminal Terminal => _terminal;
+
+    /// <summary>
+    /// Gets or sets how colors are written: 24-bit, converted to the 256- or 16-color palette,
+    /// or left out. Defaults to the terminal's <see cref="ITerminal.ColorMode"/>.
+    /// Changing it redraws every cell on the next <see cref="Render"/>.
+    /// </summary>
+    public ColorMode ColorMode
+    {
+        get
+        {
+            lock (_lock)
+                return _colorMode;
+        }
+        set
+        {
+            lock (_lock)
+            {
+                if (_colorMode == value)
+                    return;
+
+                _colorMode = value;
+                _frontBuffer = new Cell[Height, Width];
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets the screen's background color (the theme background; transparent means the
+    /// terminal's own, assumed dark). In <see cref="ColorMode.NoColor"/>, cells whose background
+    /// clearly differs from it are drawn in reverse video so highlights stay visible.
+    /// </summary>
+    public Color BaseBackground { get; set; } = Color.Transparent;
 
     /// <summary>
     /// Gets the area that drawing is currently limited to. Drawing outside it is ignored.
@@ -157,6 +190,7 @@ public class Screen
         _backBuffer = new Cell[height, width];
         _renderer = new AnsiRenderer();
         _clip = FullScreen;
+        _colorMode = terminal.ColorMode;
 
         Clear();
     }
@@ -412,10 +446,10 @@ public class Screen
            && a.Underline == b.Underline;
 
     /// <summary>
-    /// Appends one SGR sequence that resets the attributes and then sets the cell's style.
-    /// Transparent colors use the terminal's default.
+    /// Appends one SGR sequence that resets the attributes and then sets the cell's style,
+    /// encoding colors for <see cref="ColorMode"/>. Transparent colors use the terminal's default.
     /// </summary>
-    private static void AppendStyle(StringBuilder sb, Cell cell)
+    private void AppendStyle(StringBuilder sb, Cell cell)
     {
         sb.Append("\x1b[0");
 
@@ -423,21 +457,80 @@ public class Screen
         if (cell.Italic) sb.Append(";3");
         if (cell.Underline) sb.Append(";4");
 
-        if (cell.Foreground.A > 0)
-        {
-            sb.Append(";38;2;").Append(cell.Foreground.R)
-              .Append(';').Append(cell.Foreground.G)
-              .Append(';').Append(cell.Foreground.B);
-        }
+        var fg = cell.Foreground;
+        var bg = cell.Background;
+        bool hasFg = fg.A > 0;
+        bool hasBg = bg.A > 0;
 
-        if (cell.Background.A > 0)
+        switch (_colorMode)
         {
-            sb.Append(";48;2;").Append(cell.Background.R)
-              .Append(';').Append(cell.Background.G)
-              .Append(';').Append(cell.Background.B);
+            case ColorMode.TrueColor:
+                if (hasFg)
+                    sb.Append(";38;2;").Append(fg.R).Append(';').Append(fg.G).Append(';').Append(fg.B);
+                if (hasBg)
+                    sb.Append(";48;2;").Append(bg.R).Append(';').Append(bg.G).Append(';').Append(bg.B);
+                break;
+
+            case ColorMode.Palette256:
+            {
+                int bgIndex = hasBg ? ColorConversion.ToPalette256(bg) : -1;
+                if (hasFg)
+                {
+                    int fgIndex = ColorConversion.ToPalette256(fg);
+                    if (hasBg && LostContrast(fg, bg, ColorConversion.FromPalette256(fgIndex), ColorConversion.FromPalette256(bgIndex)))
+                        fgIndex = ReadableOn(ColorConversion.FromPalette256(bgIndex)) ? 16 : 231;
+                    sb.Append(";38;5;").Append(fgIndex);
+                }
+                if (hasBg)
+                    sb.Append(";48;5;").Append(bgIndex);
+                break;
+            }
+
+            case ColorMode.Palette16:
+            {
+                int bgIndex = hasBg ? ColorConversion.ToAnsi16(bg) : -1;
+                if (hasFg)
+                {
+                    int fgIndex = ColorConversion.ToAnsi16(fg);
+                    if (hasBg && LostContrast(fg, bg, ColorConversion.Ansi16[fgIndex], ColorConversion.Ansi16[bgIndex]))
+                        fgIndex = ReadableOn(ColorConversion.Ansi16[bgIndex]) ? 0 : 15;
+                    sb.Append(';').Append(fgIndex < 8 ? 30 + fgIndex : 90 + fgIndex - 8);
+                }
+                if (hasBg)
+                    sb.Append(';').Append(bgIndex < 8 ? 40 + bgIndex : 100 + bgIndex - 8);
+                break;
+            }
+
+            case ColorMode.NoColor:
+                if (hasBg && IsHighlight(bg))
+                    sb.Append(";7");
+                break;
         }
 
         sb.Append('m');
+    }
+
+    /// <summary>
+    /// True when text was readable in 24-bit color (contrast ratio ≥ 2) but isn't after
+    /// converting both colors to the palette.
+    /// </summary>
+    private static bool LostContrast(Color fg, Color bg, Color mappedFg, Color mappedBg)
+        => ColorConversion.ContrastRatio(fg, bg) >= 2 && ColorConversion.ContrastRatio(mappedFg, mappedBg) < 2;
+
+    /// <summary>
+    /// True when black text contrasts more with <paramref name="background"/> than white text.
+    /// </summary>
+    private static bool ReadableOn(Color background)
+        => ColorConversion.ContrastRatio(Color.Black, background) >= ColorConversion.ContrastRatio(Color.White, background);
+
+    /// <summary>
+    /// In <see cref="ColorMode.NoColor"/>: whether a background differs enough from the screen
+    /// background to be shown in reverse video.
+    /// </summary>
+    private bool IsHighlight(Color background)
+    {
+        var baseColor = BaseBackground.A > 0 ? BaseBackground : Color.Black;
+        return Math.Abs(ColorConversion.Luminance(background) - ColorConversion.Luminance(baseColor)) > 0.1;
     }
 
     /// <summary>

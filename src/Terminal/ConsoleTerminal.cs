@@ -1,5 +1,6 @@
 using System.Text;
 using Ambystech.Elaris.UI.Input;
+using Ambystech.Elaris.UI.Rendering;
 
 namespace Ambystech.Elaris.UI.Terminal;
 
@@ -18,6 +19,12 @@ public sealed class ConsoleTerminal : ITerminal
     {
         _decoder = new MouseSequenceDecoder(IsKeyAvailable, () => Console.ReadKey(intercept: true));
     }
+
+    /// <summary>
+    /// Gets or sets how many colors the terminal can show. Detected from environment variables
+    /// when the terminal is created (see <see cref="ColorConversion.DetectColorMode()"/>).
+    /// </summary>
+    public ColorMode ColorMode { get; set; } = ColorConversion.DetectColorMode();
 
     /// <summary>
     /// <c>true</c> on macOS and Linux, where mouse reports arrive through standard input.
