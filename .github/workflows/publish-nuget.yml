@@ -11,8 +11,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-  packages: write
+  contents: read
 
 jobs:
   build-and-test:
@@ -80,6 +79,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-and-test
     if: "!contains(github.event.head_commit.modified, '.github/workflows/')"
+    permissions:
+      contents: write   # push the tag and create the GitHub release
+      id-token: write   # request the OIDC token used for NuGet trusted publishing
 
     steps:
     - name: Checkout code
@@ -93,10 +95,19 @@ jobs:
         name: nuget-package
         path: ./artifacts
 
-    # Publish first: if the push fails (for example, an expired API key), no tag or release is
-    # created, so the workflow can simply be re-run after fixing the problem.
+    # NuGet trusted publishing: exchange the workflow's OIDC token for an API key that is valid
+    # for one hour. Needs a trusted publishing policy on nuget.org for this repository and
+    # workflow file, and the NUGET_USER secret (the nuget.org profile name, not the email).
+    - name: NuGet login
+      id: nuget-login
+      uses: NuGet/login@v1
+      with:
+        user: ${{ secrets.NUGET_USER }}
+
+    # Publish first: if the push fails, no tag or release is created, so the workflow can
+    # simply be re-run after fixing the problem.
     - name: Publish to NuGet
-      run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+      run: dotnet nuget push ./artifacts/*.nupkg --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
 
     - name: Create Git Tag
       run: |
