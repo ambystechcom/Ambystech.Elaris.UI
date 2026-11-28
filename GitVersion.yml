@@ -29,7 +29,10 @@ branches:
     is-release-branch: false
 ignore:
   sha: []
-merge-message-formats: {}
+merge-message-formats:
+  # GitHub's merge commit message ("Merge pull request #12 from owner/release/1.2.0") with the
+  # owner removed, so a merged release/x.y.z branch sets the version on main.
+  github-pr: '^Merge pull request #(?<PullRequestNumber>\d+) from (?:[^/\s]+/)?(?<SourceBranch>[^\s]+)'
 major-version-bump-message: "^(\\+semver:\\s?major|BREAKING CHANGE)"
 minor-version-bump-message: "^(\\+semver:\\s?minor|feat)"
 patch-version-bump-message: "^(\\+semver:\\s?patch|fix)"
