@@ -93,57 +93,64 @@ jobs:
         name: nuget-package
         path: ./artifacts
 
-    - name: Create Git Tag
-      run: |
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-        git tag -a "v${{ needs.build-and-test.outputs.version }}" -m "Release v${{ needs.build-and-test.outputs.version }}"
-        git push origin "v${{ needs.build-and-test.outputs.version }}"
-
+    # Publish first: if the push fails (for example, an expired API key), no tag or release is
+    # created, so the workflow can simply be re-run after fixing the problem.
     - name: Publish to NuGet
       run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
 
-    - name: Generate Release Notes
-      id: release_notes
+    - name: Create Git Tag
       run: |
-        PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-        if [ -z "$PREVIOUS_TAG" ]; then
-          CHANGELOG=$(git log --pretty=format:"- %s (%h)" --no-merges)
+        TAG="v${{ needs.build-and-test.outputs.version }}"
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+          echo "Tag $TAG already exists; skipping."
         else
-          CHANGELOG=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+          git tag -a "$TAG" -m "Release v${{ needs.build-and-test.outputs.version }}"
+          git push origin "$TAG"
         fi
-        echo "changelog<<EOF" >> $GITHUB_OUTPUT
-        echo "$CHANGELOG" >> $GITHUB_OUTPUT
-        echo "EOF" >> $GITHUB_OUTPUT
+
+    - name: Generate Release Notes
+      run: |
+        VERSION="${{ needs.build-and-test.outputs.version }}"
+        # Use the CHANGELOG section for this version ("## [x.y.z]" up to the next "## ["), if any.
+        awk -v v="$VERSION" '
+          $0 ~ "^## \\[" v "\\]" { found = 1; next }
+          found && /^## \[/ { exit }
+          found { print }
+        ' CHANGELOG.md > section.md || true
+        {
+          if [ -s section.md ]; then
+            cat section.md
+          else
+            PREVIOUS_TAG=$(git describe --tags --abbrev=0 --match "v*" HEAD^ 2>/dev/null || echo "")
+            echo "## Changes in this Release"
+            echo
+            if [ -z "$PREVIOUS_TAG" ]; then
+              git log --pretty=format:"- %s (%h)" --no-merges
+            else
+              git log "$PREVIOUS_TAG"..HEAD --pretty=format:"- %s (%h)" --no-merges
+            fi
+            echo
+          fi
+          echo
+          echo "## NuGet Package"
+          echo
+          echo '```'
+          echo "dotnet add package Ambystech.Elaris.UI --version ${{ needs.build-and-test.outputs.nuget_version }}"
+          echo '```'
+        } > release-notes.md
+        cat release-notes.md
 
     - name: Create GitHub Release
-      id: create_release
-      uses: actions/create-release@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: v${{ needs.build-and-test.outputs.version }}
-        release_name: Release v${{ needs.build-and-test.outputs.version }}
-        body: |
-          ## Changes in this Release
-
-          ${{ steps.release_notes.outputs.changelog }}
-
-          ## NuGet Package
-
-          This release is available on NuGet.org:
-          ```
-          dotnet add package Ambystech.Elaris.UI --version ${{ needs.build-and-test.outputs.nuget_version }}
-          ```
-        draft: false
-        prerelease: ${{ needs.build-and-test.outputs.is_prerelease }}
-
-    - name: Upload NuGet package to Release
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./artifacts/Ambystech.Elaris.UI.${{ needs.build-and-test.outputs.nuget_version }}.nupkg
-        asset_name: Ambystech.Elaris.UI.${{ needs.build-and-test.outputs.nuget_version }}.nupkg
-        asset_content_type: application/zip
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        TAG="v${{ needs.build-and-test.outputs.version }}"
+        PRERELEASE=""
+        if [ "${{ needs.build-and-test.outputs.is_prerelease }}" = "true" ]; then PRERELEASE="--prerelease"; fi
+        if gh release view "$TAG" >/dev/null 2>&1; then
+          gh release upload "$TAG" ./artifacts/*.nupkg --clobber
+        else
+          gh release create "$TAG" ./artifacts/*.nupkg --title "Release v${{ needs.build-and-test.outputs.version }}" --notes-file release-notes.md $PRERELEASE
+        fi

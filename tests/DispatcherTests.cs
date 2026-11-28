@@ -256,9 +256,9 @@ public class DispatcherTests
         WaitUntil(() => h.App.RenderCount > 0, "the first frame is drawn");
         int frames = h.App.RenderCount;
 
-        Thread.Sleep(300);
-
-        h.App.RenderCount.Should().BeGreaterThan(frames + 5);
+        // Nothing changes, yet frames keep coming. Wait instead of sleeping a fixed time:
+        // slow CI runners can draw fewer frames than the target rate.
+        WaitUntil(() => h.App.RenderCount > frames + 5, "more frames are drawn without any change");
     }
 
     [Fact]
