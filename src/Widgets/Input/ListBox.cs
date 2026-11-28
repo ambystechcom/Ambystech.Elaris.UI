@@ -1,6 +1,7 @@
 using System.Drawing;
 using Ambystech.Elaris.UI.Core;
 using Ambystech.Elaris.UI.Rendering;
+using Ambystech.Elaris.UI.Input;
 
 namespace Ambystech.Elaris.UI.Widgets.Input;
 
@@ -12,7 +13,6 @@ public class ListBox : Widget
     private List<string> _items = new();
     private int _selectedIndex = -1;
     private int _scrollOffset = 0;
-    private bool _hasFocus = false;
 
     /// <summary>
     /// Gets the list of items.
@@ -61,27 +61,56 @@ public class ListBox : Widget
     /// <summary>
     /// Gets or sets the background color for the selected item.
     /// </summary>
-    public Color SelectionBackgroundColor { get; set; }
+    public Color SelectionBackgroundColor
+    {
+        get => _selectionBackgroundColor ?? EffectiveTheme.Selection;
+        set => SetColor(ref _selectionBackgroundColor, value);
+    }
+
+    private Color? _selectionBackgroundColor;
 
     /// <summary>
     /// Gets or sets the foreground color for the selected item.
     /// </summary>
-    public Color SelectionForegroundColor { get; set; }
+    public Color SelectionForegroundColor
+    {
+        get => _selectionForegroundColor ?? EffectiveTheme.SelectionForeground;
+        set => SetColor(ref _selectionForegroundColor, value);
+    }
+
+    private Color? _selectionForegroundColor;
 
     /// <summary>
     /// Gets or sets the color of the scrollbar track.
     /// </summary>
-    public Color ScrollbarTrackColor { get; set; } = Color.Gray;
+    public Color ScrollbarTrackColor
+    {
+        get => _scrollbarTrackColor ?? EffectiveTheme.Border;
+        set => SetColor(ref _scrollbarTrackColor, value);
+    }
+
+    private Color? _scrollbarTrackColor;
 
     /// <summary>
     /// Gets or sets the color of the scrollbar thumb.
     /// </summary>
-    public Color ScrollbarThumbColor { get; set; } = Color.White;
+    public Color ScrollbarThumbColor
+    {
+        get => _scrollbarThumbColor ?? EffectiveTheme.Foreground;
+        set => SetColor(ref _scrollbarThumbColor, value);
+    }
+
+    private Color? _scrollbarThumbColor;
 
     /// <summary>
     /// Event raised when the selected index changes.
     /// </summary>
     public event Action<int>? SelectionChanged;
+
+    /// <summary>
+    /// Raised with the item index when an item is activated: Enter, or a double click.
+    /// </summary>
+    public event Action<int>? ItemActivated;
 
     /// <summary>
     /// Gets whether this widget can receive keyboard focus.
@@ -90,8 +119,6 @@ public class ListBox : Widget
 
     public ListBox()
     {
-        SelectionBackgroundColor = ColorHelper.FromRgb(50, 100, 150);
-        SelectionForegroundColor = Color.White;
     }
 
     /// <summary>
@@ -119,14 +146,21 @@ public class ListBox : Widget
     }
 
     /// <summary>
-    /// Clears all items.
+    /// Removes all items and resets the selection and scroll position.
     /// </summary>
-    public void Clear()
+    public void ClearItems()
     {
         _items.Clear();
         _selectedIndex = -1;
         _scrollOffset = 0;
     }
+
+    /// <summary>
+    /// Removes all items. This hides <see cref="Widget.Clear"/>, which removes child widgets;
+    /// calling <c>Clear()</c> through a <see cref="Widget"/> reference does not clear the items.
+    /// </summary>
+    [Obsolete("Use ClearItems(). Clear() hides Widget.Clear(), which removes child widgets instead of items.")]
+    public new void Clear() => ClearItems();
 
     protected override void OnRender(Screen screen)
     {
@@ -178,7 +212,6 @@ public class ListBox : Widget
     protected internal override void OnFocus()
     {
         base.OnFocus();
-        _hasFocus = true;
 
         if (_selectedIndex == -1 && _items.Count > 0)
         {
@@ -189,13 +222,50 @@ public class ListBox : Widget
     protected internal override void OnBlur()
     {
         base.OnBlur();
-        _hasFocus = false;
+    }
+
+    /// <summary>
+    /// Returns the index of the item drawn on screen row <paramref name="y"/>, or -1.
+    /// </summary>
+    internal int IndexAtRow(int y)
+    {
+        int index = _scrollOffset + (y - Y);
+        return y >= Y && y < Y + Height && index >= 0 && index < _items.Count ? index : -1;
+    }
+
+    /// <summary>
+    /// Left click selects an item, double click raises <see cref="ItemActivated"/>, and the wheel
+    /// moves the selection.
+    /// </summary>
+    protected internal override bool OnMouse(MouseEvent e)
+    {
+        if (e.IsLeftPress)
+        {
+            int index = IndexAtRow(e.Y);
+            if (index >= 0)
+            {
+                SelectedIndex = index;
+                if (e.ClickCount == 2)
+                    ItemActivated?.Invoke(index);
+            }
+            return true;
+        }
+
+        return ScrollWithArrowKeys(e) || base.OnMouse(e);
     }
 
     protected internal override bool OnKeyPress(ConsoleKeyInfo key)
     {
         switch (key.Key)
         {
+            case ConsoleKey.Enter:
+                if (_selectedIndex >= 0 && _selectedIndex < _items.Count)
+                {
+                    ItemActivated?.Invoke(_selectedIndex);
+                    return true;
+                }
+                break;
+
             case ConsoleKey.UpArrow:
                 if (_selectedIndex > 0)
                 {

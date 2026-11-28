@@ -55,7 +55,7 @@ public class CodeEditorTests
         var match = codeEditor.FindMatchingBracket(0, 16);
 
         match.Should().NotBeNull();
-        match.Value.Y.Should().Be(2);
+        match!.Value.Y.Should().Be(2);
         match.Value.X.Should().Be(0);
     }
 
@@ -111,7 +111,7 @@ public class CodeEditorTests
     {
         var codeEditor = new CodeEditor();
 
-        codeEditor.Theme.Should().Be("default");
+        codeEditor.SyntaxThemeName.Should().Be("default");
     }
 
     [Fact]
@@ -119,8 +119,38 @@ public class CodeEditorTests
     {
         var codeEditor = new CodeEditor();
 
+        codeEditor.SyntaxThemeName = "default";
+        codeEditor.SyntaxThemeName.Should().Be("default");
+    }
+
+    [Fact]
+    public void CodeEditor_UnknownSyntaxTheme_FallsBackToDefault()
+    {
+        var codeEditor = new CodeEditor { SyntaxThemeName = "does-not-exist" };
+
+        codeEditor.SyntaxThemeName.Should().Be("default");
+    }
+
+    [Fact]
+    public void CodeEditor_ObsoleteThemeAlias_StillSetsSyntaxTheme()
+    {
+        var codeEditor = new CodeEditor();
+
+#pragma warning disable CS0618 // Theme (string) is obsolete; this verifies the alias still works.
         codeEditor.Theme = "default";
         codeEditor.Theme.Should().Be("default");
+#pragma warning restore CS0618
+        codeEditor.SyntaxThemeName.Should().Be("default");
+    }
+
+    [Fact]
+    public void CodeEditor_UsesUiThemeFromParent()
+    {
+        var parent = new Ambystech.Elaris.UI.Widgets.Layout.Container { Theme = Ambystech.Elaris.UI.Theme.Light };
+        var codeEditor = new CodeEditor();
+        parent.Add(codeEditor);
+
+        codeEditor.BackgroundColor.ToArgb().Should().Be(Ambystech.Elaris.UI.Theme.Light.InputBackground.ToArgb());
     }
 }
 

@@ -1,6 +1,7 @@
 using System.Drawing;
 using Ambystech.Elaris.UI.Core;
 using Ambystech.Elaris.UI.Rendering;
+using Ambystech.Elaris.UI.Input;
 
 namespace Ambystech.Elaris.UI.Widgets.Layout;
 
@@ -54,11 +55,41 @@ public class TabContainer : Container
         set => _tabBarHeight = Math.Max(1, value);
     }
 
-    public Color ActiveTabBackgroundColor { get; set; } = ColorHelper.FromRgb(100, 150, 200);
-    public Color ActiveTabForegroundColor { get; set; } = Color.White;
-    public Color InactiveTabBackgroundColor { get; set; } = ColorHelper.FromRgb(60, 60, 60);
-    public Color InactiveTabForegroundColor { get; set; } = ColorHelper.FromRgb(200, 200, 200);
-    public Color TabBarBackgroundColor { get; set; } = ColorHelper.FromRgb(40, 40, 40);
+    public Color ActiveTabBackgroundColor
+    {
+        get => _activeTabBackgroundColor ?? EffectiveTheme.Accent;
+        set => SetColor(ref _activeTabBackgroundColor, value);
+    }
+
+    private Color? _activeTabBackgroundColor;
+    public Color ActiveTabForegroundColor
+    {
+        get => _activeTabForegroundColor ?? EffectiveTheme.AccentForeground;
+        set => SetColor(ref _activeTabForegroundColor, value);
+    }
+
+    private Color? _activeTabForegroundColor;
+    public Color InactiveTabBackgroundColor
+    {
+        get => _inactiveTabBackgroundColor ?? EffectiveTheme.Surface;
+        set => SetColor(ref _inactiveTabBackgroundColor, value);
+    }
+
+    private Color? _inactiveTabBackgroundColor;
+    public Color InactiveTabForegroundColor
+    {
+        get => _inactiveTabForegroundColor ?? EffectiveTheme.SurfaceForeground;
+        set => SetColor(ref _inactiveTabForegroundColor, value);
+    }
+
+    private Color? _inactiveTabForegroundColor;
+    public Color TabBarBackgroundColor
+    {
+        get => _tabBarBackgroundColor ?? EffectiveTheme.SurfaceAlt;
+        set => SetColor(ref _tabBarBackgroundColor, value);
+    }
+
+    private Color? _tabBarBackgroundColor;
 
     public event Action<Tab, Tab?, int, int>? TabChanged;
 
@@ -162,6 +193,40 @@ public class TabContainer : Container
         content.Y = Y + _tabBarHeight;
         content.Width = Width;
         content.Height = Math.Max(0, Height - _tabBarHeight);
+    }
+
+    /// <summary>
+    /// Left click on a tab title activates that tab.
+    /// </summary>
+    protected internal override bool OnMouse(MouseEvent e)
+    {
+        if (e.IsLeftPress && e.Y >= Y && e.Y < Y + _tabBarHeight)
+        {
+            // Same layout as RenderTabBar.
+            int currentX = X + 1;
+            for (int i = 0; i < _tabs.Count; i++)
+            {
+                var tab = _tabs[i];
+                if (!tab.IsEnabled)
+                    continue;
+
+                int tabWidth = tab.Title.Length + 4;
+                if (currentX + tabWidth > X + Width)
+                    break;
+
+                if (e.X >= currentX && e.X < currentX + tabWidth)
+                {
+                    ActiveTabIndex = i;
+                    return true;
+                }
+
+                currentX += tabWidth + 1;
+            }
+
+            return true;
+        }
+
+        return base.OnMouse(e);
     }
 
     protected internal override bool OnKeyPress(ConsoleKeyInfo key)

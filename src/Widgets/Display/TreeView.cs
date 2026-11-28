@@ -1,6 +1,7 @@
 using System.Drawing;
 using Ambystech.Elaris.UI.Core;
 using Ambystech.Elaris.UI.Rendering;
+using Ambystech.Elaris.UI.Input;
 
 namespace Ambystech.Elaris.UI.Widgets.Display;
 
@@ -81,17 +82,35 @@ public class TreeView : Widget
     /// <summary>
     /// Gets or sets the background color for the selected node.
     /// </summary>
-    public Color SelectionBackgroundColor { get; set; }
+    public Color SelectionBackgroundColor
+    {
+        get => _selectionBackgroundColor ?? EffectiveTheme.Selection;
+        set => SetColor(ref _selectionBackgroundColor, value);
+    }
+
+    private Color? _selectionBackgroundColor;
 
     /// <summary>
     /// Gets or sets the foreground color for the selected node.
     /// </summary>
-    public Color SelectionForegroundColor { get; set; }
+    public Color SelectionForegroundColor
+    {
+        get => _selectionForegroundColor ?? EffectiveTheme.SelectionForeground;
+        set => SetColor(ref _selectionForegroundColor, value);
+    }
+
+    private Color? _selectionForegroundColor;
 
     /// <summary>
     /// Gets or sets the color for tree connectors.
     /// </summary>
-    public Color ConnectorColor { get; set; } = Color.Gray;
+    public Color ConnectorColor
+    {
+        get => _connectorColor ?? EffectiveTheme.MutedForeground;
+        set => SetColor(ref _connectorColor, value);
+    }
+
+    private Color? _connectorColor;
 
     /// <summary>
     /// Gets or sets the expand/collapse indicator character for expanded nodes.
@@ -130,8 +149,6 @@ public class TreeView : Widget
 
     public TreeView()
     {
-        SelectionBackgroundColor = ColorHelper.FromRgb(50, 100, 150);
-        SelectionForegroundColor = Color.White;
     }
 
     protected override void OnRender(Screen screen)
@@ -299,7 +316,6 @@ public class TreeView : Widget
     protected internal override void OnFocus()
     {
         base.OnFocus();
-        _hasFocus = true;
 
         if (_selectedNode == null)
         {
@@ -314,7 +330,28 @@ public class TreeView : Widget
     protected internal override void OnBlur()
     {
         base.OnBlur();
-        _hasFocus = false;
+    }
+
+    /// <summary>
+    /// Left click selects a node; double click acts like Enter (activates and expands or
+    /// collapses it). The wheel moves the selection.
+    /// </summary>
+    protected internal override bool OnMouse(MouseEvent e)
+    {
+        if (e.IsLeftPress)
+        {
+            var visibleNodes = GetVisibleNodes();
+            int index = _scrollOffset + (e.Y - Y);
+            if (e.Y >= Y && e.Y < Y + Height && index >= 0 && index < visibleNodes.Count)
+            {
+                SelectedNode = visibleNodes[index].node;
+                if (e.ClickCount == 2)
+                    OnKeyPress(new ConsoleKeyInfo('\r', ConsoleKey.Enter, false, false, false));
+            }
+            return true;
+        }
+
+        return ScrollWithArrowKeys(e) || base.OnMouse(e);
     }
 
     protected internal override bool OnKeyPress(ConsoleKeyInfo key)

@@ -1,6 +1,7 @@
 using System.Drawing;
 using Ambystech.Elaris.UI.Core;
 using Ambystech.Elaris.UI.Rendering;
+using Ambystech.Elaris.UI.Input;
 
 namespace Ambystech.Elaris.UI.Widgets.Menu;
 
@@ -15,21 +16,63 @@ internal class MenuDropdown : Widget
     /// <summary>
     /// Gets or sets the background color for selected dropdown items.
     /// </summary>
-    public Color SelectedBackgroundColor { get; set; } = ColorHelper.FromRgb(80, 80, 150);
+    public Color SelectedBackgroundColor
+    {
+        get => _selectedBackgroundColor ?? EffectiveTheme.Selection;
+        set => SetColor(ref _selectedBackgroundColor, value);
+    }
+
+    private Color? _selectedBackgroundColor;
 
     /// <summary>
     /// Gets or sets the foreground color for disabled dropdown items.
     /// </summary>
-    public Color DisabledForegroundColor { get; set; } = Color.Gray;
+    public Color DisabledForegroundColor
+    {
+        get => _disabledForegroundColor ?? EffectiveTheme.MutedForeground;
+        set => SetColor(ref _disabledForegroundColor, value);
+    }
+
+    private Color? _disabledForegroundColor;
 
     /// <summary>
     /// Gets or sets the border color for the dropdown.
     /// </summary>
-    public Color BorderColor { get; set; } = Color.Gray;
+    public Color BorderColor
+    {
+        get => _borderColor ?? EffectiveTheme.Border;
+        set => SetColor(ref _borderColor, value);
+    }
+
+    private Color? _borderColor;
 
     public MenuDropdown()
     {
         ZIndex = 1000; // Ensure dropdown renders on top
+    }
+
+    /// <summary>
+    /// Called with the item index when an item is clicked. Set by <see cref="MenuBar"/>.
+    /// </summary>
+    internal Action<int>? ItemClicked { get; set; }
+
+    /// <summary>
+    /// A left click on an item (released over the same dropdown) activates it.
+    /// </summary>
+    protected internal override bool OnMouse(MouseEvent e)
+    {
+        if (e.IsLeftPress || e.Kind == MouseEventKind.Drag)
+            return true;
+
+        if (e.IsLeftRelease)
+        {
+            int index = e.Y - Y;
+            if (Bounds.Contains(e.Position) && index >= 0 && index < Menu.SubItems.Count)
+                ItemClicked?.Invoke(index);
+            return true;
+        }
+
+        return base.OnMouse(e);
     }
 
     protected override void OnRender(Screen screen)

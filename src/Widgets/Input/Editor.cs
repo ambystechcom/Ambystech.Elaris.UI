@@ -2,6 +2,7 @@ using System.Drawing;
 using System.Text;
 using Ambystech.Elaris.UI.Core;
 using Ambystech.Elaris.UI.Rendering;
+using Ambystech.Elaris.UI.Input;
 
 namespace Ambystech.Elaris.UI.Widgets.Input;
 
@@ -17,13 +18,11 @@ public class Editor : Widget
     protected int _scrollOffsetX = 0;
     private bool _showLineNumbers = false;
     private bool _wordWrap = false;
-    private Color _lineNumberColor = Color.Gray;
     private Point? _selectionStart;
     private Point? _selectionEnd;
     private readonly Stack<EditorState> _undoStack = new();
     private readonly Stack<EditorState> _redoStack = new();
     private const int MaxUndoHistory = 50;
-    protected bool _hasFocus = false;
 
     /// <summary>
     /// Gets or sets the full text content.
@@ -108,9 +107,14 @@ public class Editor : Widget
     /// </summary>
     public Color LineNumberColor
     {
-        get => _lineNumberColor;
-        set => _lineNumberColor = value;
+        get => _lineNumberColor ?? EffectiveTheme.MutedForeground;
+        set => SetColor(ref _lineNumberColor, value);
     }
+
+    private Color? _lineNumberColor;
+
+    /// <inheritdoc />
+    protected override Color DefaultBackgroundColor => EffectiveTheme.InputBackground;
 
     /// <summary>
     /// Gets or sets the selection start position.
@@ -160,8 +164,6 @@ public class Editor : Widget
     public Editor()
     {
         _lines.Add(string.Empty);
-        BackgroundColor = Color.Black;
-        ForegroundColor = Color.White;
     }
 
     /// <summary>
@@ -419,7 +421,7 @@ public class Editor : Widget
             if (_showLineNumbers)
             {
                 string lineNumber = (lineIndex + 1).ToString().PadLeft(GetLineNumberWidth());
-                screen.WriteText(X, renderY, lineNumber, _lineNumberColor, BackgroundColor);
+                screen.WriteText(X, renderY, lineNumber, LineNumberColor, BackgroundColor);
             }
 
             string line = _lines[lineIndex];
@@ -440,14 +442,46 @@ public class Editor : Widget
     protected internal override void OnFocus()
     {
         base.OnFocus();
-        _hasFocus = true;
     }
 
     protected internal override void OnBlur()
     {
         base.OnBlur();
-        _hasFocus = false;
         ClearSelection();
+    }
+
+    /// <summary>
+    /// Left click moves the cursor (clearing the selection); the wheel scrolls three lines.
+    /// </summary>
+    protected internal override bool OnMouse(MouseEvent e)
+    {
+        if (e.IsLeftPress)
+        {
+            int lineNumberWidth = _showLineNumbers ? GetLineNumberWidth() + 1 : 0;
+            int line = Math.Clamp(_scrollOffsetY + (e.Y - Y), 0, _lines.Count - 1);
+            int column = Math.Clamp(_scrollOffsetX + (e.X - X - lineNumberWidth), 0, _lines[line].Length);
+
+            ClearSelection();
+            MoveCursor(line, column);
+            Invalidate();
+            return true;
+        }
+
+        if (e.Kind == MouseEventKind.WheelUp)
+        {
+            ScrollUp(3);
+            Invalidate();
+            return true;
+        }
+
+        if (e.Kind == MouseEventKind.WheelDown)
+        {
+            ScrollDown(3);
+            Invalidate();
+            return true;
+        }
+
+        return base.OnMouse(e);
     }
 
     protected internal override bool OnKeyPress(ConsoleKeyInfo key)

@@ -19,13 +19,15 @@ The programming language used for syntax highlighting. Falls back to `"csharp"` 
 codeEditor.Language = "csharp";
 ```
 
-### `Theme` (string)
+### `SyntaxThemeName` (string)
 
-The theme name used for token colors. Falls back to `"default"` if the requested theme isn't registered.
+The name of the color scheme used for token colors. Falls back to `"default"` if the requested scheme isn't registered.
 
 ```csharp
-codeEditor.Theme = "default";
+codeEditor.SyntaxThemeName = "default";
 ```
+
+This is separate from the UI color theme (`Widget.Theme` / `Application.Theme`), which sets the editor's background, line numbers and bracket highlight. The old string `Theme` property still works but is obsolete.
 
 ### `SyntaxHighlighting` (bool)
 
@@ -127,7 +129,7 @@ var codeEditor = new CodeEditor
     AutoIndent = true,
     TabSize = 4,
     Language = "csharp",
-    Theme = "default",
+    SyntaxThemeName = "default",
     ForegroundColor = Color.White,
     BackgroundColor = Color.Black,
     LineNumberColor = ColorHelper.FromRgb(100, 100, 100),

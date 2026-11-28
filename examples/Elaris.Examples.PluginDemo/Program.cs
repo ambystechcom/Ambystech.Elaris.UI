@@ -67,7 +67,7 @@ var rightFrame = new Frame("Custom Language (Rust)")
 var codeEditor1 = new CodeEditor
 {
     Language = "csharp",
-    Theme = "default",
+    SyntaxThemeName = "default",
     ShowLineNumbers = true,
     ForegroundColor = Color.White,
     BackgroundColor = Color.Black,
@@ -77,7 +77,7 @@ var codeEditor1 = new CodeEditor
 var codeEditor2 = new CodeEditor
 {
     Language = "rust",
-    Theme = "default",
+    SyntaxThemeName = "default",
     ShowLineNumbers = true,
     ForegroundColor = Color.White,
     BackgroundColor = Color.Black,

@@ -1,6 +1,7 @@
 using System.Drawing;
 using Ambystech.Elaris.UI.Core;
 using Ambystech.Elaris.UI.Rendering;
+using Ambystech.Elaris.UI.Input;
 
 namespace Ambystech.Elaris.UI.Widgets.Input;
 
@@ -11,9 +12,8 @@ public class TextField : Widget
 {
     private string _text = string.Empty;
     private int _cursorPosition = 0;
-    private bool _hasFocus = false;
     private string _placeholder = string.Empty;
-    private Color _placeholderColor;
+    private Color? _placeholderColor;
 
     /// <summary>
     /// Gets or sets the text content.
@@ -42,8 +42,8 @@ public class TextField : Widget
     /// </summary>
     public Color PlaceholderColor
     {
-        get => _placeholderColor.A == 0 ? Color.Gray : _placeholderColor;
-        set => _placeholderColor = value;
+        get => _placeholderColor ?? EffectiveTheme.MutedForeground;
+        set => SetColor(ref _placeholderColor, value);
     }
 
     /// <summary>
@@ -127,7 +127,10 @@ public class TextField : Widget
             int cursorX = X + _cursorPosition;
             if (cursorX < X + Width)
             {
-                char cursorChar = _cursorPosition < _text.Length ? _text[_cursorPosition] : ' ';
+                // Over the placeholder, keep its character visible (inverted) instead of a blank.
+                char cursorChar = _cursorPosition < _text.Length ? _text[_cursorPosition]
+                    : _text.Length == 0 && _cursorPosition < displayText.Length ? displayText[_cursorPosition]
+                    : ' ';
                 screen.SetCell(cursorX, Y, new Cell(cursorChar, BackgroundColor, ForegroundColor));
             }
         }
@@ -136,15 +139,28 @@ public class TextField : Widget
     protected internal override void OnFocus()
     {
         base.OnFocus();
-        _hasFocus = true;
         Focused?.Invoke();
     }
 
     protected internal override void OnBlur()
     {
         base.OnBlur();
-        _hasFocus = false;
         Blurred?.Invoke();
+    }
+
+    /// <summary>
+    /// Left click moves the cursor to the clicked column.
+    /// </summary>
+    protected internal override bool OnMouse(MouseEvent e)
+    {
+        if (e.IsLeftPress)
+        {
+            _cursorPosition = Math.Clamp(e.X - X, 0, _text.Length);
+            Invalidate();
+            return true;
+        }
+
+        return base.OnMouse(e);
     }
 
     protected internal override bool OnKeyPress(ConsoleKeyInfo key)

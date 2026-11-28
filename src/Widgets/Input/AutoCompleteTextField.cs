@@ -1,6 +1,7 @@
 using System.Drawing;
 using Ambystech.Elaris.UI.Core;
 using Ambystech.Elaris.UI.Rendering;
+using Ambystech.Elaris.UI.Input;
 
 namespace Ambystech.Elaris.UI.Widgets.Input;
 
@@ -11,9 +12,7 @@ public class AutoCompleteTextField : TextField
 {
     private readonly ListBox _listBox;
     private CancellationTokenSource? _debounceCts;
-    private Timer? _debounceTimer;
     private bool _isPopupVisible = false;
-    private bool _isLoadingSuggestions = false;
 
     /// <summary>
     /// Delegate for providing suggestions based on the current text input.
@@ -41,27 +40,33 @@ public class AutoCompleteTextField : TextField
     /// </summary>
     public Color SuggestionBackgroundColor
     {
-        get => _listBox.BackgroundColor;
-        set => _listBox.BackgroundColor = value;
+        get => _suggestionBackgroundColor ?? EffectiveTheme.SurfaceAlt;
+        set => SetColor(ref _suggestionBackgroundColor, value);
     }
+
+    private Color? _suggestionBackgroundColor;
 
     /// <summary>
     /// Gets or sets the foreground color for suggestions.
     /// </summary>
     public Color SuggestionForegroundColor
     {
-        get => _listBox.ForegroundColor;
-        set => _listBox.ForegroundColor = value;
+        get => _suggestionForegroundColor ?? EffectiveTheme.Foreground;
+        set => SetColor(ref _suggestionForegroundColor, value);
     }
+
+    private Color? _suggestionForegroundColor;
 
     /// <summary>
     /// Gets or sets the highlight color for the selected suggestion.
     /// </summary>
     public Color SelectionHighlightColor
     {
-        get => _listBox.SelectionBackgroundColor;
-        set => _listBox.SelectionBackgroundColor = value;
+        get => _selectionHighlightColor ?? EffectiveTheme.Selection;
+        set => SetColor(ref _selectionHighlightColor, value);
     }
+
+    private Color? _selectionHighlightColor;
 
     /// <summary>
     /// Event raised when a suggestion is selected.
@@ -84,11 +89,8 @@ public class AutoCompleteTextField : TextField
         {
             Visible = false,
             ZIndex = 1000, // Ensure popup renders on top
-            BackgroundColor = ColorHelper.FromRgb(30, 30, 30),
-            ForegroundColor = Color.White,
-            SelectionBackgroundColor = ColorHelper.FromRgb(50, 100, 150),
-            SelectionForegroundColor = Color.White
         };
+        _listBox.LogicalParent = this;
 
         TextChanged += OnTextChangedInternal;
     }
@@ -99,11 +101,8 @@ public class AutoCompleteTextField : TextField
         {
             Visible = false,
             ZIndex = 1000,
-            BackgroundColor = ColorHelper.FromRgb(30, 30, 30),
-            ForegroundColor = Color.White,
-            SelectionBackgroundColor = ColorHelper.FromRgb(50, 100, 150),
-            SelectionForegroundColor = Color.White
         };
+        _listBox.LogicalParent = this;
 
         TextChanged += OnTextChangedInternal;
     }
@@ -119,7 +118,7 @@ public class AutoCompleteTextField : TextField
             return;
         }
 
-        _listBox.Clear();
+        _listBox.ClearItems();
         int count = Math.Min(suggestions.Count, MaxSuggestions);
         for (int i = 0; i < count; i++)
         {
@@ -144,7 +143,7 @@ public class AutoCompleteTextField : TextField
         {
             _isPopupVisible = false;
             _listBox.Visible = false;
-            _listBox.Clear();
+            _listBox.ClearItems();
             PopupClosed?.Invoke();
         }
     }
@@ -160,14 +159,23 @@ public class AutoCompleteTextField : TextField
             return;
         }
 
-        await LoadSuggestionsAsync(Text);
+        await LoadSuggestionsAsync(Text, StartNewQuery());
+    }
+
+    /// <summary>
+    /// Cancels the previous query (debounce or provider call) and returns a token for a new one.
+    /// </summary>
+    private CancellationToken StartNewQuery()
+    {
+        _debounceCts?.Cancel();
+        _debounceCts?.Dispose();
+        _debounceCts = new CancellationTokenSource();
+        return _debounceCts.Token;
     }
 
     private void OnTextChangedInternal(string newText)
     {
-        // Cancel any pending debounce timer
-        _debounceTimer?.Dispose();
-        _debounceCts?.Cancel();
+        var token = StartNewQuery();
 
         if (string.IsNullOrWhiteSpace(newText) || SuggestionsProvider == null)
         {
@@ -175,31 +183,37 @@ public class AutoCompleteTextField : TextField
             return;
         }
 
-        // Create new cancellation token source for this query
-        _debounceCts = new CancellationTokenSource();
-        var token = _debounceCts.Token;
-
-        // Start debounce timer
-        _debounceTimer = new Timer(async _ =>
-        {
-            if (!token.IsCancellationRequested)
-            {
-                await LoadSuggestionsAsync(newText, token);
-            }
-        }, null, DebounceDelay, Timeout.Infinite);
+        _ = DebounceAndLoadAsync(newText, token);
     }
 
-    private async Task LoadSuggestionsAsync(string text, CancellationToken cancellationToken = default)
+    /// <remarks>
+    /// Runs on the caller's <see cref="SynchronizationContext"/>. Inside <see cref="Application.Run"/>
+    /// that is the UI thread, so the suggestions are applied there, not on a timer thread.
+    /// </remarks>
+    private async Task DebounceAndLoadAsync(string text, CancellationToken cancellationToken)
     {
-        if (_isLoadingSuggestions || SuggestionsProvider == null)
+        try
+        {
+            await Task.Delay(DebounceDelay, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        await LoadSuggestionsAsync(text, cancellationToken);
+    }
+
+    private async Task LoadSuggestionsAsync(string text, CancellationToken cancellationToken)
+    {
+        if (SuggestionsProvider == null)
             return;
 
         try
         {
-            _isLoadingSuggestions = true;
-
             var suggestions = await SuggestionsProvider(text);
 
+            // A newer query replaced this one while the provider was running.
             if (!cancellationToken.IsCancellationRequested)
             {
                 ShowSuggestions(suggestions);
@@ -210,11 +224,8 @@ public class AutoCompleteTextField : TextField
         }
         catch (Exception)
         {
-            HideSuggestions();
-        }
-        finally
-        {
-            _isLoadingSuggestions = false;
+            if (!cancellationToken.IsCancellationRequested)
+                HideSuggestions();
         }
     }
 
@@ -253,8 +264,58 @@ public class AutoCompleteTextField : TextField
             }
 
             _listBox.Bounds = new Rectangle(popupX, popupY, popupWidth, popupHeight);
-            _listBox.Render(screen);
+
+            _listBox.BackgroundColor = SuggestionBackgroundColor;
+            _listBox.ForegroundColor = SuggestionForegroundColor;
+            _listBox.SelectionBackgroundColor = SelectionHighlightColor;
+
+            // The popup may extend past the container the field is in.
+            using (screen.PushOverlay())
+            {
+                _listBox.Render(screen);
+            }
         }
+    }
+
+    /// <summary>
+    /// Includes the suggestion popup, which is drawn outside the field's bounds.
+    /// </summary>
+    public override Widget? HitTest(System.Drawing.Point point)
+    {
+        if (Visible && _isPopupVisible && _listBox.Visible && _listBox.Bounds.Contains(point))
+            return this;
+
+        return base.HitTest(point);
+    }
+
+    /// <summary>
+    /// A left click on a suggestion accepts it; the wheel over the popup moves the selection.
+    /// Clicks on the field itself move the cursor.
+    /// </summary>
+    protected internal override bool OnMouse(MouseEvent e)
+    {
+        bool inPopup = _isPopupVisible && _listBox.Visible && _listBox.Bounds.Contains(e.Position);
+
+        if (inPopup && e.IsLeftPress)
+        {
+            int index = _listBox.IndexAtRow(e.Y);
+            if (index >= 0)
+            {
+                _listBox.SelectedIndex = index;
+                AcceptSuggestion();
+            }
+            return true;
+        }
+
+        if (inPopup && e.IsWheel)
+        {
+            int delta = e.Kind == MouseEventKind.WheelUp ? -1 : 1;
+            _listBox.SelectedIndex = Math.Clamp(_listBox.SelectedIndex + delta, 0, _listBox.Items.Count - 1);
+            Invalidate();
+            return true;
+        }
+
+        return base.OnMouse(e);
     }
 
     protected internal override bool OnKeyPress(ConsoleKeyInfo key)
@@ -312,8 +373,8 @@ public class AutoCompleteTextField : TextField
     /// </summary>
     public void Dispose()
     {
-        _debounceTimer?.Dispose();
         _debounceCts?.Cancel();
         _debounceCts?.Dispose();
+        _debounceCts = null;
     }
 }

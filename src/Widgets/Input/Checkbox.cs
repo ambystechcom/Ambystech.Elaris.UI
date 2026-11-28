@@ -1,5 +1,6 @@
 using System.Drawing;
 using Ambystech.Elaris.UI.Rendering;
+using Ambystech.Elaris.UI.Input;
 
 namespace Ambystech.Elaris.UI.Widgets.Input;
 
@@ -10,7 +11,6 @@ public class Checkbox : Widget
 {
     private bool _isChecked = false;
     private string _label = string.Empty;
-    private bool _hasFocus = false;
 
     /// <summary>
     /// Gets or sets whether the checkbox is checked.
@@ -45,12 +45,24 @@ public class Checkbox : Widget
     /// <summary>
     /// Gets or sets the color of the checkbox brackets.
     /// </summary>
-    public Color BracketColor { get; set; } = Color.Yellow;
+    public Color BracketColor
+    {
+        get => _bracketColor ?? EffectiveTheme.Warning;
+        set => SetColor(ref _bracketColor, value);
+    }
+
+    private Color? _bracketColor;
 
     /// <summary>
     /// Gets or sets the color of the checkmark when checked.
     /// </summary>
-    public Color CheckmarkColor { get; set; } = Color.Green;
+    public Color CheckmarkColor
+    {
+        get => _checkmarkColor ?? EffectiveTheme.Success;
+        set => SetColor(ref _checkmarkColor, value);
+    }
+
+    private Color? _checkmarkColor;
 
     /// <summary>
     /// Gets whether this widget can receive keyboard focus.
@@ -106,13 +118,25 @@ public class Checkbox : Widget
     protected internal override void OnFocus()
     {
         base.OnFocus();
-        _hasFocus = true;
     }
 
     protected internal override void OnBlur()
     {
         base.OnBlur();
-        _hasFocus = false;
+    }
+
+    /// <summary>
+    /// Left click toggles the checkbox.
+    /// </summary>
+    protected internal override bool OnMouse(MouseEvent e)
+    {
+        if (e.IsLeftPress)
+        {
+            Toggle();
+            return true;
+        }
+
+        return base.OnMouse(e);
     }
 
     protected internal override bool OnKeyPress(ConsoleKeyInfo key)

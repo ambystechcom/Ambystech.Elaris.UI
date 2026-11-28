@@ -19,6 +19,7 @@
     <PackageProjectUrl>https://github.com/ambystechcom/Ambystech.Elaris.UI</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ambystechcom/Ambystech.Elaris.UI</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <PackageReleaseNotes>See https://github.com/ambystechcom/Ambystech.Elaris.UI/blob/main/CHANGELOG.md</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <RootNamespace>Ambystech.Elaris.UI</RootNamespace>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -28,11 +29,6 @@
   <ItemGroup>
     <InternalsVisibleTo Include="Ambystech.Elaris.UI.Tests" />
   </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="System.Drawing.Primitives" Version="4.3.0" />
-  </ItemGroup>
-
 
   <ItemGroup>
     <None Include="../README.md" Pack="true" PackagePath="\" Condition="Exists('../README.md')" />
